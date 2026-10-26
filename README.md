@@ -15,6 +15,7 @@ HTML.** Each connector pulls a company's open roles as clean JSON/XML/RSS —
 title, location, posting date, description and a **stable job ID** — so dates
 are reliable and your decisions (applied, skipped, marked) survive across runs.
 
+More information regarding intended use and implementation is in the blueprint document of this repo. 
 
 ---
 
