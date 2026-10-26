@@ -1,0 +1,20 @@
+name,careers_url
+# Tier-2 resolver hints: a careers (or direct ATS) URL per company. The resolver
+# fetches it, extracts the ATS + token, and PROBE-VERIFIES feed tokens before use,
+# so an imperfect URL can never yield a broken feed — it just falls back to the
+# browser tier or to slug auto-detection. Add a line for any company you want to
+# bring online; a direct ATS URL (e.g. the *.myworkdayjobs.com link) is most reliable.
+Shell,https://jobs.shell.com
+Bosch,https://jobs.bosch.com
+JPMorgan,https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001
+AstraZeneca,https://astrazeneca.wd3.myworkdayjobs.com/Careers
+Roche,https://roche.wd3.myworkdayjobs.com/roche-ext
+ING,https://ing.wd3.myworkdayjobs.com/ICSNLDGEN
+Volkswagen / CARIAD,https://jobs.volkswagen-group.com
+Siemens AG,https://jobs.siemens.com
+Allianz,https://careers.allianz.com
+Mercedes-Benz,https://jobs.mercedes-benz.com
+Infineon,https://jobs.infineon.com
+ABB,https://careers.abb/global/en/home
+Adidas,https://career5.successfactors.eu/careers?company=AdidasP
+Nestlé,https://career2.successfactors.eu/career?career_company=nestleHRprdBX

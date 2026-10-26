@@ -1,0 +1,22 @@
+Your Name
+Portfolio: your-website.com | github.com/your-username
+City, Country
+
+One-line summary of who you are and what you are looking for.
+
+Education
+University Name	Month YYYY – Month YYYY
+MSc, Your Programme
+Thesis: Your thesis title
+
+Experience
+Company Name, City	Month YYYY – Month YYYY
+Job Title
+- What you did, with tools and results
+- ...
+
+Skills
+Python, SQL, Power BI, ...
+
+Languages
+English (fluent), ...

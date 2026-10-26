@@ -1,0 +1,20 @@
+# JobScout — dependencies
+requests>=2.31
+python-dateutil>=2.9
+openpyxl>=3.1
+python-docx>=1.1
+anthropic>=0.40          # Claude API: Sonnet scores matches, Haiku extracts Tier-3 pages
+
+# Dashboard (local web app)
+fastapi>=0.110
+uvicorn[standard]>=0.29
+
+# Bot-walled career sites (L'Oréal & co): browser-TLS impersonation for plain
+# HTTP fetches. Optional but recommended — without it those sites stay empty.
+curl_cffi>=0.7
+
+# Tier-3 (OPTIONAL): headless-browser rendering for client-rendered career sites
+# (Cornerstone, iCIMS, Avature, SAP-hosted SuccessFactors, bespoke SPAs).
+# Tiers 1-2 (feeds + careers-page resolver) work without it. To enable Tier-3:
+#     pip install playwright && playwright install chromium
+# playwright>=1.40

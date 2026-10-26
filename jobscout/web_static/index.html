@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>JobScout</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --ink:#101828; --muted:#667085; --faint:#98a2b3;
+    --line:#e7eaf0; --line-2:#f0f2f6; --brand:#4f46e5; --brand-ink:#4338ca;
+    --brand-soft:#eef2ff; --brand-border:#c7d0fb;
+    --good:#16a34a; --good-soft:#ecfdf5; --good-ink:#047857;
+    --ok:#65a30d; --warn:#d97706; --warn-soft:#fff7ed; --warn-ink:#b45309;
+    --bad:#dc2626; --bad-soft:#fef2f2;
+    --shadow:0 1px 2px rgba(16,24,40,.04),0 4px 14px rgba(16,24,40,.05);
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:var(--brand-ink);text-decoration:none}
+  a:hover{text-decoration:underline}
+  button{font-family:inherit;cursor:pointer}
+  input,select,textarea{font-family:inherit;color:var(--ink)}
+  :focus-visible{outline:2px solid var(--brand);outline-offset:1px;border-radius:6px}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 22px}
+
+  /* ---------- Top bar ---------- */
+  header.bar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.85);
+    backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line)}
+  .bar-in{display:flex;align-items:center;gap:14px;height:62px}
+  .logo{display:flex;align-items:center;gap:11px;font-weight:700;font-size:17.5px;letter-spacing:-.02em}
+  .logo .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#6366f1,#4f46e5);
+    display:grid;place-items:center;color:#fff;font-size:16px;box-shadow:0 2px 8px rgba(79,70,229,.35)}
+  .logo small{display:block;font-weight:500;font-size:11.5px;color:var(--muted);letter-spacing:0}
+  .spacer{flex:1}
+  .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);
+    background:var(--line-2);border:1px solid var(--line);padding:5px 10px;border-radius:999px;white-space:nowrap}
+  .badge .dot{width:7px;height:7px;border-radius:50%;background:var(--good);flex-shrink:0}
+  .badge.heur .dot{background:var(--warn)}
+  .badge b{color:var(--ink);font-weight:600}
+  .btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 14px;border-radius:10px;
+    font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:8px;transition:.15s}
+  .btn:hover{border-color:#d3d7e0;box-shadow:var(--shadow)}
+  .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+  .btn.primary:hover{background:var(--brand-ink)}
+  .btn.primary:disabled{opacity:.6;cursor:default}
+  .btn.small{padding:5px 10px;font-size:12px;border-radius:8px}
+  .spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;
+    animation:rot .7s linear infinite;display:inline-block}
+  @keyframes rot{to{transform:rotate(360deg)}}
+
+  /* ---------- Overview: latest run + database (compact, side by side) ---------- */
+  .ovgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+  .ovcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:13px 16px;box-shadow:var(--shadow);min-width:0}
+  .ov-head{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:10px}
+  .ov-head .t{font-size:13.5px;font-weight:700}
+  .ov-head .when{margin-left:auto;font-size:11.5px;color:var(--muted);white-space:nowrap}
+  /* compact funnel: number-over-label chips joined by arrows */
+  .flow{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+  .fchip{min-width:0}
+  .fchip .fn{font-size:16.5px;font-weight:750;letter-spacing:-.02em;line-height:1.2}
+  .fchip .fl{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;display:flex;align-items:center}
+  .fchip.final .fn{color:var(--good-ink)}
+  .farrow{color:#c6cbd6;font-size:11px;flex:none}
+  .ov-foot{margin-top:9px;font-size:12px;color:var(--muted);border-top:1px dashed var(--line-2);padding-top:8px}
+  .ov-foot .warn{color:var(--warn-ink)}
+  .ov-empty{color:var(--muted);font-size:12.5px;padding:8px 0}
+  /* database card */
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+  .kpi{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:7px 10px;min-width:0}
+  .kpi .n{font-size:17px;font-weight:750;letter-spacing:-.02em}
+  .kpi .l{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;font-weight:600;white-space:nowrap}
+  .runsum{display:none;margin:10px 0 0;padding:10px 14px;background:var(--good-soft);
+    border:1px solid #bbe7cd;border-radius:10px;font-size:13px;color:#14532d}
+  .runsum.err{background:var(--bad-soft);border-color:#fecaca;color:#991b1b}
+  .runsum b{font-weight:700}
+  /* Blocking-condition banner: shown when scoring is impossible, because that
+     is the one failure that silently empties the board. */
+  .apibanner{display:none;margin:0 0 14px;padding:12px 15px;border-radius:12px;
+    background:var(--bad-soft);border:1px solid #fecaca;color:#991b1b;font-size:13px;
+    line-height:1.55}
+  .apibanner .ab-t{font-weight:700;display:block;margin-bottom:2px}
+  .apibanner .ab-w{color:#7f1d1d}
+  .apibanner a{color:#991b1b;font-weight:650}
+
+  /* ---------- Run scope picker ---------- */
+  .runwrap{position:relative;display:flex}
+  .runwrap .btn.primary{border-top-right-radius:0;border-bottom-right-radius:0}
+  .btn.caret{border-top-left-radius:0;border-bottom-left-radius:0;border-left:1px solid rgba(255,255,255,.35);
+    background:var(--brand);border-color:var(--brand);color:#fff;padding:8px 10px}
+  .btn.caret:hover{background:var(--brand-ink)}
+  .btn.caret.scoped{background:var(--warn);border-color:var(--warn)}
+  .runmenu{display:none;position:absolute;right:0;top:calc(100% + 8px);width:308px;max-width:92vw;background:var(--panel);
+    border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 40px rgba(16,24,40,.16);z-index:60;
+    padding:12px}
+  .runmenu.open{display:block}
+  .runmenu h5{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint)}
+  .runmenu .search{margin-bottom:8px}
+  .runcompanies{max-height:250px;overflow:auto;border:1px solid var(--line-2);border-radius:9px;padding:4px}
+  .runcompanies label{display:flex;gap:8px;align-items:center;padding:5px 8px;border-radius:7px;
+    font-size:12.5px;cursor:pointer}
+  .runcompanies label:hover{background:var(--line-2)}
+  .runcompanies input{accent-color:var(--brand)}
+  .runcompanies .tiny{margin-left:auto;font-size:10.5px;color:var(--faint);white-space:nowrap}
+  .runmenu .foot{display:flex;gap:8px;align-items:center;margin-top:10px}
+  .runmenu .foot .btn{flex:1;justify-content:center}
+  .runscope-note{font-size:11.5px;color:var(--warn-ink);margin-top:8px;display:none}
+
+  /* ---------- Archive toolbar ---------- */
+  .arch-toolbar{display:flex;align-items:center;gap:10px;margin:2px 0 12px;flex-wrap:wrap}
+  .arch-toolbar .result-count{margin:0}
+  .arch-toolbar select{width:auto;min-width:150px}
+
+  /* ---------- Live run progress ---------- */
+  .runprog{display:none;margin:10px 0 0;padding:13px 16px;background:var(--panel);
+    border:1px solid var(--brand-border);border-radius:12px;box-shadow:var(--shadow)}
+  .rp-top{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
+  .rp-phase{font-weight:650;font-size:13.5px;color:var(--ink);display:flex;align-items:center;gap:8px}
+  .rp-phase .pulse{width:8px;height:8px;border-radius:50%;background:var(--brand);flex:none;
+    animation:rp-pulse 1.1s ease-in-out infinite}
+  @keyframes rp-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.75)}}
+  .rp-pct{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--brand-ink);
+    font-variant-numeric:tabular-nums;white-space:nowrap}
+  .rp-bar{height:8px;background:var(--line-2);border-radius:99px;overflow:hidden}
+  .rp-fill{height:100%;width:0%;border-radius:99px;
+    background:linear-gradient(90deg,var(--brand),#8b9bff);transition:width .5s ease}
+  .rp-fill.ind{width:38%;animation:rp-slide 1.3s ease-in-out infinite alternate}
+  @keyframes rp-slide{from{margin-left:0}to{margin-left:62%}}
+  .rp-current{margin-top:7px;font-size:12.5px;color:var(--muted);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rp-counters{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px;font-size:12px;color:var(--muted)}
+  .rp-counters b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .rp-log{margin-top:8px;border-top:1px dashed var(--line);padding-top:7px;font-size:11.5px;
+    color:var(--faint);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.65}
+  .rp-log div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rp-log .star{color:var(--good-ink);font-weight:600}
+
+  /* ---------- Tabs ---------- */
+  .tabs{display:flex;gap:4px;margin:16px 0 18px;border-bottom:1px solid var(--line)}
+  .tab{padding:10px 15px;font-weight:600;font-size:13.5px;color:var(--muted);border:none;background:none;
+    border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tab.active{color:var(--brand-ink);border-bottom-color:var(--brand)}
+  .tab .pill{display:inline-block;min-width:20px;text-align:center;font-size:11px;background:var(--line-2);
+    color:var(--muted);border-radius:999px;padding:1px 7px;margin-left:6px}
+  .tab.active .pill{background:var(--brand-soft);color:var(--brand-ink)}
+
+  /* ---------- Info tooltips ---------- */
+  .info{width:14px;height:14px;color:var(--faint);cursor:help;margin-left:5px;flex:none;
+    vertical-align:-2.5px;transition:color .12s}
+  .info:hover{color:var(--brand-ink)}
+  .hint{cursor:help;border-bottom:1px dotted #c3c9d4}
+  #tipbox{position:fixed;z-index:100;max-width:260px;background:#101828;color:#fff;font-size:12px;
+    line-height:1.5;padding:8px 11px;border-radius:9px;box-shadow:0 10px 34px rgba(0,0,0,.3);
+    pointer-events:none;opacity:0;transition:opacity .12s}
+  #tipbox.show{opacity:1}
+
+  /* ---------- Board: search panel on top, results below ---------- */
+  .board{padding-bottom:60px}
+  .searchbar{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 18px;box-shadow:var(--shadow);margin-bottom:16px}
+  .sb-main{display:flex;gap:10px}
+  .sb-main .search{flex:1;min-width:0;font-size:14px;padding:11px 14px;border-radius:10px}
+  .sb-go{padding:0 26px;font-size:14px;border-radius:10px;flex:none}
+  /* summary bar shown in place of the search panel once a search ran */
+  .search-active{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;background:var(--panel);
+    border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px;box-shadow:var(--shadow);
+    margin-bottom:16px}
+  .search-active .sa-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--faint);font-weight:700;white-space:nowrap}
+  .sa-chips{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:180px}
+  .sa-chip{font-size:12.5px;padding:4px 10px;border-radius:999px;background:var(--brand-soft);
+    border:1px solid var(--brand-border);color:var(--brand-ink);font-weight:600;white-space:nowrap}
+  .sa-chip.plain{background:var(--line-2);border-color:var(--line);color:var(--muted)}
+  .search-active .btn{flex:none;margin-left:auto}
+  .fade-in{animation:fadein .18s ease}
+  @keyframes fadein{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+  .sb-filters{display:flex;flex-wrap:wrap;gap:14px 26px;align-items:flex-end;
+    margin-top:14px;padding-top:14px;border-top:1px solid var(--line-2)}
+  .sbf{min-width:0}
+  .sbf>h4{margin:0 0 7px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);
+    display:flex;align-items:center}
+  .sbf select{width:auto;min-width:140px}
+  .sbf.grow{flex:1 1 160px;max-width:240px}
+  /* multi-select company filter (button + checkbox dropdown) */
+  .msel{position:relative}
+  .msel-btn{display:flex;align-items:center;gap:8px;min-width:170px;max-width:260px;
+    background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 11px;
+    font-size:13px;color:var(--ink);cursor:pointer;text-align:left}
+  .msel-btn:hover{border-color:var(--brand-border)}
+  .msel-btn .msel-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .msel-btn .msel-txt.none{color:var(--muted)}
+  .msel-btn .msel-car{font-size:10px;color:var(--faint)}
+  .msel-panel{display:none;position:absolute;left:0;top:calc(100% + 6px);width:280px;max-width:92vw;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    box-shadow:0 12px 40px rgba(16,24,40,.16);z-index:60;padding:10px}
+  .msel-panel.open{display:block}
+  .msel-panel .search{margin-bottom:8px}
+  .msel-list{max-height:230px;overflow:auto;border:1px solid var(--line-2);border-radius:9px;padding:4px}
+  .msel-list label{display:flex;gap:8px;align-items:center;padding:5px 8px;border-radius:7px;
+    font-size:12.5px;cursor:pointer}
+  .msel-list label:hover{background:var(--line-2)}
+  .msel-list input{accent-color:var(--brand)}
+  .msel-list .tiny{margin-left:auto;font-size:10.5px;color:var(--faint);white-space:nowrap}
+  .msel-foot{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:9px}
+  .results-head{display:flex;align-items:center;gap:12px;margin:0 0 10px}
+  .results-head .result-count{margin:0}
+  .results-head .sort-inline{margin-left:auto;display:flex;align-items:center;gap:8px;
+    font-size:12.5px;color:var(--muted);white-space:nowrap}
+  .results-head .sort-inline select{width:auto;padding:6px 9px}
+  .welcome{padding:56px 20px}
+  .welcome .wicon{font-size:30px;margin-bottom:8px}
+  .welcome p{margin:6px auto 18px;max-width:440px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-size:12.5px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;
+    color:var(--muted);user-select:none;cursor:pointer;transition:.12s}
+  .chip:hover{border-color:var(--brand-border)}
+  .chip.on{background:var(--brand-soft);border-color:var(--brand-border);color:var(--brand-ink);font-weight:600}
+  input[type=range]{width:100%;accent-color:var(--brand)}
+  select,.search{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:13px}
+  .search::placeholder{color:var(--faint)}
+  .slideval{font-weight:700;color:var(--brand-ink)}
+  .clearlink{font-size:12px;color:var(--muted);background:none;border:none;padding:0;text-decoration:underline;cursor:pointer}
+  .result-count{font-size:12.5px;color:var(--muted);margin:0 0 10px 2px}
+
+  /* ---------- Role cards ---------- */
+  .list{display:flex;flex-direction:column;gap:12px}
+  .role{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:15px 17px;
+    box-shadow:var(--shadow);display:grid;grid-template-columns:56px 1fr 148px;gap:15px;transition:border-color .15s}
+  .role:hover{border-color:#d5dae4}
+  .fit{width:52px;height:52px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:800;
+    font-size:18px;letter-spacing:-.02em}
+  .fit small{display:block;font-size:8px;font-weight:700;opacity:.85;letter-spacing:.04em;margin-top:-2px}
+  .role .body{min-width:0}
+  .role h3{margin:0 0 3px;font-size:15px;font-weight:650;letter-spacing:-.01em;line-height:1.35}
+  .role h3 a{color:var(--ink)}
+  .role h3 a:hover{color:var(--brand-ink)}
+  .meta{font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:7px}
+  .meta .sep{color:#d0d5dd}
+  .tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;border-radius:6px;white-space:nowrap}
+  .tag.llm{background:var(--good-soft);color:var(--good-ink)}
+  .tag.heur{background:var(--warn-soft);color:var(--warn-ink)}
+  .tag.new{background:var(--brand-soft);color:var(--brand-ink)}
+  .tag.closed{background:#f1f5f9;color:#64748b}
+  .tag.reviewed{background:#eef2ff;color:#4338ca}
+  .tag.cat{background:var(--line-2);color:var(--muted);text-transform:none;font-weight:600;letter-spacing:0}
+  .why{font-size:13.5px;color:#344054;margin:2px 0 0}
+  .watch{font-size:12.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;
+    padding:6px 10px;margin-top:8px;display:flex;gap:7px}
+  .watch b{color:var(--warn-ink)}
+  .desc-toggle{background:none;border:none;color:var(--brand-ink);font-size:12.5px;font-weight:600;
+    padding:0;margin-top:8px;cursor:pointer}
+  .desc-toggle:hover{text-decoration:underline}
+  .desc{display:none;margin-top:8px;padding:11px 13px;background:#fafbfc;border:1px solid var(--line-2);
+    border-radius:9px;font-size:12.5px;color:#475467;white-space:pre-wrap;max-height:300px;overflow:auto}
+  .desc.show{display:block}
+  .actions{display:flex;flex-direction:column;gap:7px;align-items:stretch}
+  .seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{flex:1;border:none;background:#fff;padding:7px 0;font-size:11.5px;font-weight:600;color:var(--muted)}
+  .seg button:hover{background:var(--line-2)}
+  .seg button.act-mark:hover{background:#f0fdfa;color:#0f766e}
+  .seg button.act-applied:hover{background:var(--good-soft);color:var(--good-ink)}
+  .seg button.act-skip:hover{background:var(--warn-soft);color:var(--warn-ink)}
+  .seg button.act-reject:hover{background:var(--bad-soft);color:var(--bad)}
+  .seg button+button{border-left:1px solid var(--line)}
+  .statuspill{font-size:11px;font-weight:700;text-align:center;padding:4px 0;border-radius:7px}
+  .note{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;
+    resize:vertical;min-height:34px;color:var(--ink)}
+  .note::placeholder{color:var(--faint)}
+  .showmore{margin:16px auto 0;display:block}
+
+  /* ---------- Coverage ---------- */
+  .cov-summary{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .cov-chip{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 13px;
+    font-size:13px;box-shadow:var(--shadow);cursor:pointer;transition:.12s}
+  .cov-chip:hover{border-color:var(--brand-border)}
+  .cov-chip.on{background:var(--brand-soft);border-color:var(--brand-border)}
+  .cov-chip.static{cursor:default}
+  .cov-chip.static:hover{border-color:var(--line)}
+  .cov-chip b{color:var(--brand-ink)}
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+  th,td{text-align:left;padding:9px 12px;font-size:13px;border-bottom:1px solid var(--line-2);vertical-align:top}
+  th{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);background:#fafbfc;font-weight:700}
+  tr:last-child td{border-bottom:none}
+  .badge-status{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .s-feed{background:var(--good-soft);color:var(--good-ink)}
+  .s-browser{background:var(--warn-soft);color:var(--warn-ink)}
+  .s-residual{background:#f1f5f9;color:#64748b}
+  .health{font-size:11.5px;white-space:nowrap}
+  .health.ok{color:var(--good-ink)}
+  .health.empty{color:var(--warn-ink)}
+  .health.error{color:var(--bad)}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--muted);word-break:break-all}
+
+  /* ---------- Run history ---------- */
+  .run-entry{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:13px 16px;box-shadow:var(--shadow)}
+  .re-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:9px}
+  .re-when{font-weight:700;font-size:13.5px}
+  .re-cost{margin-left:auto;font-size:12px;color:var(--muted);white-space:nowrap}
+  .re-tag{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn-ink);cursor:default}
+  .re-details{display:flex;flex-wrap:wrap;gap:5px 16px;margin-top:10px;padding-top:9px;
+    border-top:1px dashed var(--line-2);font-size:12px;color:var(--muted)}
+  .re-details b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .re-notes{margin-top:7px;font-size:11.5px;color:var(--faint);line-height:1.65;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .re-notes div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* ---------- Hard Filters ---------- */
+  .hf-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .hf-top .cov-summary{margin:0;flex:1}
+  .hf-top .btn{flex:none}
+  .hf-banner{display:none;margin:0 0 14px;padding:9px 13px;border-radius:10px;font-size:12.5px;
+    background:var(--warn-soft);border:1px solid #fde68a;color:var(--warn-ink)}
+  .hf-name{font-weight:650}
+  .hf-what{color:var(--muted);font-size:12px;margin-top:2px;line-height:1.45;max-width:430px}
+  .hf-rule{font-size:12px;color:#475467}
+  .hf-rule .rulehead{margin-bottom:3px;color:var(--faint)}
+  .hf-rule .term{display:inline-block;background:var(--line-2);border-radius:6px;
+    padding:1px 7px;margin:1px 3px 1px 0;font-size:11.5px}
+  .hf-rule .term.extra{background:var(--brand-soft);color:var(--brand-ink)}
+  .hf-count{font-variant-numeric:tabular-nums}
+  .hf-actions{display:flex;gap:6px;justify-content:flex-end;white-space:nowrap}
+  tr.hf-off td{opacity:.55}
+  tr.hf-off td.hf-switch,tr.hf-off td.hf-actions{opacity:1}
+  .tag.builtin{background:var(--line-2);color:var(--muted)}
+  .tag.custom{background:var(--brand-soft);color:var(--brand-ink)}
+  .hf-other{margin-top:12px;font-size:12px;color:var(--muted)}
+  .hf-other b{color:var(--ink)}
+  .btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+  .btn.danger:hover{background:#b91c1c;border-color:#b91c1c;box-shadow:var(--shadow)}
+  /* toggle switch */
+  .switch{position:relative;width:36px;height:21px;display:inline-block;flex:none;vertical-align:middle}
+  .switch input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer;z-index:2}
+  .switch .sl{position:absolute;inset:0;background:#d3d8e2;border-radius:99px;transition:.18s}
+  .switch .sl:after{content:"";position:absolute;top:2.5px;left:2.5px;width:16px;height:16px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 3px rgba(16,24,40,.3);transition:.18s}
+  .switch input:checked+.sl{background:var(--brand)}
+  .switch input:checked+.sl:after{transform:translateX(15px)}
+  .switch input:focus-visible+.sl{outline:2px solid var(--brand);outline-offset:1px}
+  .switch input:disabled+.sl{opacity:.5}
+  /* modal */
+  .modal-back{position:fixed;inset:0;background:rgba(16,24,40,.45);z-index:80;display:none;
+    align-items:flex-start;justify-content:center;padding:9vh 16px;overflow:auto}
+  .modal-back.open{display:flex}
+  .modal{background:var(--panel);border-radius:14px;max-width:520px;width:100%;
+    box-shadow:0 24px 70px rgba(16,24,40,.35);padding:20px 22px;animation:fadein .15s ease}
+  .modal h3{margin:0 0 4px;font-size:15.5px}
+  .modal p.sub{margin:0 0 14px;color:var(--muted);font-size:12.5px;line-height:1.5}
+  .fm-row{margin-bottom:12px}
+  .fm-row>label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;
+    color:var(--faint);font-weight:700;margin-bottom:5px}
+  .fm-row input[type=text],.fm-row input[type=number],.fm-row textarea,.fm-row select{
+    width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:13px;background:#fff}
+  .fm-row textarea{min-height:74px;resize:vertical;line-height:1.5}
+  .fm-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+  .fm-hint{font-size:11.5px;color:var(--faint);margin-top:4px;line-height:1.45}
+  .fm-error{display:none;margin:0 0 12px;padding:8px 12px;border-radius:9px;font-size:12.5px;
+    background:var(--bad-soft);border:1px solid #fecaca;color:#991b1b}
+  .fm-details{max-height:250px;overflow:auto;border:1px solid var(--line-2);border-radius:10px;
+    padding:11px 13px;background:#fafbfc}
+  .fm-details h5{margin:10px 0 5px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;
+    color:var(--faint)}
+  .fm-details h5:first-child{margin-top:0}
+  .fm-details .term{display:inline-block;background:var(--line-2);border-radius:6px;
+    padding:1px 7px;margin:1px 3px 1px 0;font-size:11.5px;color:#475467}
+  .fm-details .term.extra{background:var(--brand-soft);color:var(--brand-ink)}
+  .fm-details .hf-groupterms{width:100%;margin:5px 0 3px;padding:6px 9px;
+    border:1px dashed var(--brand-border);border-radius:8px;font-size:12px;background:#fff}
+  .fm-details .hf-groupterms::placeholder{color:var(--faint)}
+  .fm-details .hf-groupterms:focus{border-style:solid}
+  .fm-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+  .fm-foot .btn.danger{margin-right:auto}
+
+  /* ---------- Settings ---------- */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;
+    box-shadow:var(--shadow);margin-bottom:16px}
+  .card h3{margin:0 0 4px;font-size:15px}
+  .card p.sub{margin:0 0 14px;color:var(--muted);font-size:13px}
+  textarea.prefs{width:100%;min-height:210px;padding:13px;border:1px solid var(--line);border-radius:10px;
+    font-size:13.5px;line-height:1.6;resize:vertical}
+  .cvbox{max-height:280px;overflow:auto;background:#fafbfc;border:1px solid var(--line);border-radius:10px;
+    padding:14px;font-size:12.5px;white-space:pre-wrap;color:#475467}
+  .kv{display:flex;gap:8px;font-size:13px;color:var(--muted);margin:4px 0}
+  .kv b{color:var(--ink);font-weight:600;min-width:150px}
+
+  .empty{text-align:center;color:var(--muted);padding:54px 20px;background:var(--panel);
+    border:1px dashed var(--line);border-radius:12px;font-size:13.5px}
+  .empty b{color:var(--ink)}
+  .hidden{display:none!important}
+
+  /* ---------- Toast ---------- */
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;
+    background:#101828;color:#fff;padding:11px 18px;border-radius:11px;font-size:13.5px;font-weight:500;
+    box-shadow:0 8px 30px rgba(0,0,0,.25);transition:.25s;z-index:50;pointer-events:none;max-width:92vw}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media(max-width:920px){
+    .ovgrid{grid-template-columns:1fr}
+    .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .tabs{overflow-x:auto}
+    .sb-main{flex-wrap:wrap}
+    .sb-go{flex:1;padding:10px 20px}
+    .role{grid-template-columns:48px 1fr}
+    .actions{grid-column:1/-1;flex-direction:row;flex-wrap:wrap}
+    .actions .seg{flex:1;min-width:190px}
+    .bar-in .badge{display:none}
+  }
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+  </symbol>
+</svg>
+<header class="bar">
+  <div class="wrap bar-in">
+    <div class="logo"><span class="mark">◎</span>
+      <div>JobScout<small>CV-driven job recommender</small></div>
+    </div>
+    <div class="spacer"></div>
+    <span id="spendBadge" class="badge" title="Claude API spend recorded by JobScout">…</span>
+    <span id="modelBadge" class="badge"><span class="dot"></span><span id="modelText">…</span></span>
+    <div class="runwrap">
+      <button id="linkcheckBtn" class="btn" onclick="runLinkcheck()"
+              title="Verify that every recommendation's job page still exists — dead links are removed from the board">
+        ⛓ Check links
+      </button>
+      <button id="runBtn" class="btn primary" onclick="runPipeline()">
+        <span id="runIcon">⟳</span><span id="runLabel">Run pipeline</span>
+      </button>
+      <button id="runCaret" class="btn caret" title="Choose companies for this run"
+              onclick="toggleRunMenu(event)">▾</button>
+      <div id="runMenu" class="runmenu" onclick="event.stopPropagation()">
+        <h5>Run scope</h5>
+        <input id="runQ" class="search" type="search" placeholder="Filter companies…"
+               oninput="renderRunCompanies()" />
+        <div id="runCompanies" class="runcompanies"></div>
+        <div id="runScopeNote" class="runscope-note"></div>
+        <div class="foot">
+          <button class="btn" onclick="clearRunScope()" title="Clear the selection — the main button then runs every company">Clear selection</button>
+          <button id="runScopedBtn" class="btn primary" onclick="runScoped()">Run selected</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="apiBanner" class="apibanner" role="alert"></div>
+  <div class="ovgrid">
+    <div id="runCard" class="ovcard"></div>
+    <div id="dbCard" class="ovcard"></div>
+  </div>
+  <div id="runSummary" class="runsum"></div>
+  <div id="runProgress" class="runprog" aria-live="polite">
+    <div class="rp-top">
+      <span class="rp-phase"><span class="pulse"></span><span id="rpPhase">Starting run…</span></span>
+      <span id="rpPct" class="rp-pct"></span>
+    </div>
+    <div class="rp-bar"><div id="rpFill" class="rp-fill ind"></div></div>
+    <div id="rpCurrent" class="rp-current"></div>
+    <div id="rpCounters" class="rp-counters"></div>
+    <div id="rpLog" class="rp-log" style="display:none"></div>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="board" onclick="switchTab('board')">Board <span class="pill" id="cBoard">0</span></button>
+    <button class="tab" data-tab="archive" onclick="switchTab('archive')">Archive <span class="pill" id="cArch">0</span></button>
+    <button class="tab" data-tab="coverage" onclick="switchTab('coverage')">Coverage <span class="pill" id="cCov">0</span></button>
+    <button class="tab" data-tab="runs" onclick="switchTab('runs')">Run History <span class="pill" id="cRuns">0</span></button>
+    <button class="tab" data-tab="filters" onclick="switchTab('filters')">Hard Filters <span class="pill" id="cFilt">0</span></button>
+    <button class="tab" data-tab="settings" onclick="switchTab('settings')">Profile Settings</button>
+  </nav>
+
+  <!-- BOARD -->
+  <section id="tab-board">
+    <div class="board">
+      <div class="searchbar" id="searchPanel">
+        <div class="sb-main">
+          <input id="q" class="search" type="search"
+                 placeholder="Search job title or company — leave empty to browse everything"
+                 onkeydown="if(event.key==='Enter')doSearch()" />
+          <button id="searchBtn" class="btn primary sb-go" onclick="doSearch()">Search</button>
+        </div>
+        <div class="sb-filters">
+          <div class="sbf">
+            <h4>Status <svg class="info" role="img" aria-label="More information" data-tip="New = fresh recommendations you haven't acted on · Marked = flagged by you as interesting · Applied = you applied. Click a chip to include or exclude it."><use href="#i-info"/></svg></h4>
+            <div class="chips" id="statusChips"></div>
+          </div>
+          <div class="sbf grow">
+            <h4>Min fit score · <span class="slideval" id="minFitVal">0</span> <svg class="info" role="img" aria-label="More information" data-tip="Only show roles Claude scored at least this high against your CV. 0 shows everything — slide up to narrow the board."><use href="#i-info"/></svg></h4>
+            <input type="range" id="minFit" min="0" max="100" step="5" value="0" oninput="onMinFit()" />
+          </div>
+          <div class="sbf">
+            <h4>Posted within</h4>
+            <select id="postedWithin">
+              <option value="">Any time</option>
+              <option value="7">Last 7 days</option>
+              <option value="14">Last 14 days</option>
+              <option value="30">Last 30 days</option>
+            </select>
+          </div>
+          <div class="sbf">
+            <h4>Company <svg class="info" role="img" aria-label="More information" data-tip="Pick one or more companies — the board then only shows roles from those. No selection means all companies."><use href="#i-info"/></svg></h4>
+            <div class="msel">
+              <button type="button" class="msel-btn" id="compBtn" onclick="toggleCompMenu(event)"
+                      aria-haspopup="true" aria-expanded="false">
+                <span class="msel-txt none" id="compBtnTxt">All companies</span>
+                <span class="msel-car">▾</span>
+              </button>
+              <div class="msel-panel" id="compMenu" onclick="event.stopPropagation()">
+                <input id="compQ" class="search" type="search" placeholder="Filter companies…" oninput="renderCompanyOptions()" />
+                <div class="msel-list" id="compList"></div>
+                <div class="msel-foot">
+                  <button class="clearlink" onclick="clearCompanyFilter()">Clear selection</button>
+                  <button class="btn" onclick="closeCompMenu()">Done</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sbf" style="margin-left:auto">
+            <button class="clearlink" onclick="clearFilters()">Reset filters</button>
+          </div>
+        </div>
+      </div>
+      <div class="search-active hidden" id="searchActive">
+        <span class="sa-label">Current search</span>
+        <div class="sa-chips" id="saChips"></div>
+        <button class="btn primary" onclick="newSearch()">New Search</button>
+      </div>
+      <div class="results-head hidden" id="resultsHead">
+        <p class="result-count" id="boardCount"></p>
+        <div class="sort-inline">Sort by
+          <select id="sortBy" onchange="renderBoard()">
+            <option value="fit">Fit score</option>
+            <option value="posted">Posted date</option>
+            <option value="company">Company</option>
+          </select>
+        </div>
+      </div>
+      <div class="list" id="boardList"></div>
+      <button id="moreBtn" class="btn showmore hidden" onclick="showMore()">Show more</button>
+    </div>
+  </section>
+
+  <!-- ARCHIVE -->
+  <section id="tab-archive" class="hidden" style="padding-bottom:60px">
+    <div class="arch-toolbar">
+      <select id="archFilter" onchange="renderArchive()" title="Filter the archive by status">
+        <option value="">Skipped + Rejected</option>
+        <option value="Skipped">Skipped only</option>
+        <option value="Rejected">Rejected only</option>
+      </select>
+      <p class="result-count" id="archCount">Skipped and rejected roles land here — restore any of them to the board.</p>
+    </div>
+    <div class="list" id="archiveList"></div>
+  </section>
+
+  <!-- COVERAGE -->
+  <section id="tab-coverage" class="hidden" style="padding-bottom:60px">
+    <div class="cov-summary" id="covSummary"></div>
+    <table id="covTable"><thead><tr>
+      <th>Company</th><th>Tier</th><th>Open jobs</th><th>Relevant</th><th>On board</th>
+      <th>Last fetch</th><th>ATS</th><th>Token / careers link</th>
+    </tr></thead><tbody></tbody></table>
+  </section>
+
+  <!-- RUN HISTORY -->
+  <section id="tab-runs" class="hidden" style="padding-bottom:60px">
+    <div class="list" id="runsList"></div>
+  </section>
+
+  <!-- HARD FILTERS -->
+  <section id="tab-filters" class="hidden" style="padding-bottom:60px">
+    <div class="hf-top">
+      <div class="cov-summary" id="hfStats"></div>
+      <button class="btn primary" onclick="openFilterModal()">＋ Add filter</button>
+    </div>
+    <div class="hf-banner" id="hfBanner">Filter configuration changed since the last run —
+      the next pipeline run re-applies it to every posting, including those already excluded.</div>
+    <table id="hfTable"><thead><tr>
+      <th style="width:36%">Filter</th><th>Rule</th><th style="width:105px">Excluded now</th>
+      <th style="width:64px">Active</th><th style="width:150px"></th>
+    </tr></thead><tbody></tbody></table>
+    <div class="hf-other" id="hfOther"></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="tab-settings" class="hidden" style="padding-bottom:60px">
+    <div class="card">
+      <h3>Preferences note</h3>
+      <p class="sub">Your words steer the matcher: target roles, seniority, locations, languages. Save, then run the pipeline to re-score with the new preferences.</p>
+      <textarea class="prefs" id="prefs"></textarea>
+      <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
+        <button class="btn primary" onclick="savePrefs()">Save preferences</button>
+        <span id="prefsHint" style="font-size:12.5px;color:var(--muted)"></span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Matching engine</h3>
+      <p class="sub">Postings pass the hard filters — view and manage them in the <a href="javascript:switchTab('filters')">Hard Filters</a> tab — then Claude scores the survivors against your CV.</p>
+      <div class="kv"><b>Scoring model</b><span id="setModel">…</span></div>
+      <div class="kv"><b>Extraction model</b><span id="setExtractModel">…</span> (reads Tier-3 careers pages)</div>
+      <div class="kv"><b>Surface threshold</b><span id="setThresh">…</span> (min fit score on the board)</div>
+      <div class="kv"><b>Budget per run</b><span id="setBudget">…</span></div>
+      <div class="kv"><b>API spend, last run</b><span id="setSpendRun">…</span></div>
+      <div class="kv"><b>API spend, total</b><span id="setSpendTotal">…</span></div>
+      <div class="kv"><b>CV on file</b><span id="setCv">…</span></div>
+    </div>
+    <div class="card">
+      <h3>CV preview</h3>
+      <p class="sub">Read-only. Stored once at setup; re-run <span class="mono">python -m jobscout.cli setup --cv …</span> to update it.</p>
+      <div class="cvbox" id="cvBox">…</div>
+    </div>
+  </section>
+</main>
+
+<div id="fmBack" class="modal-back" onclick="closeFilterModal(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="fmTitle" onclick="event.stopPropagation()">
+    <h3 id="fmTitle">Add a hard filter</h3>
+    <p class="sub" id="fmWhat"></p>
+    <div class="fm-error" id="fmError"></div>
+    <div id="fmCustom">
+      <div class="fm-row"><label for="fmName">Name</label>
+        <input type="text" id="fmName" maxlength="60" placeholder="e.g. No consulting roles"></div>
+      <div class="fm-row"><label for="fmDesc">Description (optional)</label>
+        <input type="text" id="fmDesc" maxlength="200"
+               placeholder="Shown under the filter's name — e.g. why this filter exists"></div>
+      <div class="fm-row"><label for="fmCat">Category (optional)</label>
+        <input type="text" id="fmCat" maxlength="60" list="hfCatList"
+               placeholder="Group related filters — pick a suggestion or type your own">
+        <datalist id="hfCatList"></datalist></div>
+      <div class="fm-grid">
+        <div class="fm-row"><label for="fmField">Applies to</label>
+          <select id="fmField">
+            <option value="title">Job title</option>
+            <option value="location">Location</option>
+            <option value="description">Description</option>
+            <option value="title+description">Title + description</option>
+          </select></div>
+        <div class="fm-row"><label for="fmMatch">Match</label>
+          <select id="fmMatch">
+            <option value="word">Whole words</option>
+            <option value="contains">Contains</option>
+          </select></div>
+      </div>
+      <div class="fm-row"><label for="fmTerms">Rule — terms to exclude</label>
+        <textarea id="fmTerms" placeholder="One per line, or comma-separated — e.g.&#10;consulting&#10;consultant"></textarea>
+        <div class="fm-hint">This becomes the filter's rule: a posting matching <b>any</b> term is
+          excluded before scoring. “Whole words” is safer — it never fires on words that merely
+          contain a term.</div></div>
+    </div>
+    <div class="fm-row" id="fmDetailsRow" style="display:none"><label>What this filter looks for</label>
+      <div class="fm-hint" id="fmDetailsHint" style="margin:0 0 6px"></div>
+      <div class="fm-details" id="fmDetails"></div></div>
+    <div class="fm-row" id="fmDaysRow" style="display:none"><label for="fmDays">Maximum posting age (days)</label>
+      <input type="number" id="fmDays" min="1" max="365"></div>
+    <div class="fm-row" id="fmYearsRow" style="display:none"><label for="fmYears">Maximum years of required experience</label>
+      <input type="number" id="fmYears" min="0" max="30"></div>
+    <div class="fm-foot">
+      <button class="btn danger" id="fmDelete" style="display:none"
+              onclick="deleteFilterFromModal(this)">Delete filter</button>
+      <button class="btn" onclick="closeFilterModal()">Cancel</button>
+      <button class="btn primary" id="fmSave" onclick="saveFilterModal()">Save filter</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+// Board chips: Skipped/Rejected live in the Archive tab, not here.
+const BOARD_STATUSES = ["New","Marked","Applied"];
+const state = {
+  statuses: new Set(["New","Marked","Applied"]),
+  // Min fit starts at 0: the board shows everything until the user narrows it.
+  minFit: 0, shortlistMin: 45, minFitTouched: false,
+  comps: new Set(),      // selected companies — empty means "all companies"
+  companyNames: [],      // every company currently on the board
+  rows: [], limit: 40,
+  searched: false,       // no results are shown until the user hits Search
+  applied: null,         // filter snapshot taken when Search was clicked
+};
+
+/* ---------- info tooltips (hover the ⓘ icons) ---------- */
+const tipbox=document.createElement("div");tipbox.id="tipbox";
+document.body.appendChild(tipbox);
+function showTip(el){
+  const txt=el.dataset.tip;if(!txt)return;
+  tipbox.textContent=txt;tipbox.classList.add("show");
+  const r=el.getBoundingClientRect(), w=tipbox.offsetWidth, h=tipbox.offsetHeight;
+  let x=Math.max(8,Math.min(r.left+r.width/2-w/2,innerWidth-w-8));
+  let y=r.bottom+8;
+  if(y+h>innerHeight-8) y=r.top-h-8;
+  tipbox.style.left=x+"px";tipbox.style.top=y+"px";
+}
+function hideTip(){tipbox.classList.remove("show");}
+document.addEventListener("mouseover",e=>{
+  const el=e.target.closest("[data-tip]");
+  el?showTip(el):hideTip();
+});
+document.addEventListener("scroll",hideTip,true);
+
+/* ---------- utils ---------- */
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),3600);}
+function fitColor(s){if(s==null)return"#9ca3af";if(s>=80)return"#16a34a";if(s>=65)return"#65a30d";
+  if(s>=45)return"#d97706";return"#9ca3af";}
+function statusColor(s){return{New:"#eef2ff;color:#4338ca",Marked:"#f0fdfa;color:#0f766e",
+  Applied:"#ecfdf5;color:#047857",
+  Skipped:"#fff7ed;color:#b45309",Rejected:"#fef2f2;color:#dc2626"}[s]||"#eee";}
+function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+// Shared info icon (SVG symbol #i-info) — hover shows the data-tip tooltip.
+function infoIcon(tip){return `<svg class="info" role="img" aria-label="More information" data-tip="${esc(tip||"")}"><use href="#i-info"/></svg>`;}
+// Only allow http(s) links from feeds — never javascript:/data: schemes.
+function safeUrl(u){u=(u||"").trim();return /^https?:\/\//i.test(u)?u:"";}
+function daysAgo(iso){if(!iso)return null;const d=(Date.now()-new Date(iso+"T00:00:00").getTime())/864e5;
+  return isNaN(d)?null:Math.floor(d);}
+function money(x){return "$"+(+x).toFixed(x>=1?2:3);}
+
+function switchTab(name){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab===name));
+  ["board","archive","coverage","runs","filters","settings"]
+    .forEach(n=>$("#tab-"+n).classList.toggle("hidden",n!==name));
+  if(name==="archive")loadArchive();
+  if(name==="coverage")loadCoverage();
+  if(name==="runs")loadRuns();
+  if(name==="filters")loadFilters();
+  if(name==="settings")loadProfile();
+}
+
+/* ---------- stats + badges ---------- */
+function fmtN(n){return (n==null?0:n).toLocaleString();}
+function fmtWhen(iso){
+  if(!iso) return "";
+  const d=new Date(iso); if(isNaN(d)) return iso;
+  const today=new Date(); const sameDay=d.toDateString()===today.toDateString();
+  const t=d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+  return sameDay?`today ${t}`:`${d.toLocaleDateString([],{day:"numeric",month:"short"})} ${t}`;
+}
+function renderRunCard(lr){
+  const el=$("#runCard");
+  if(!lr || !lr.summary){
+    el.innerHTML=`<div class="ov-head"><span class="t">Latest run</span></div>
+      <div class="ov-empty">No run recorded yet — hit <b>Run pipeline</b> to fetch and score fresh postings.</div>`;
+    return;
+  }
+  const sm=lr.summary;
+  const judged=sm.llm_used??sm.scored??0;
+  const removed=sm.validation_removed??0;
+  const added=Math.max(0,(sm.scored??0)-removed);
+  const chip=(n,l,tip,cls)=>`<div class="fchip ${cls||""}">
+    <div class="fn">${n}</div><div class="fl">${l}${infoIcon(tip)}</div></div>`;
+  const arrow=`<div class="farrow">→</div>`;
+  const scope=(sm.notes||[]).find(n=>/^partial run:/.test(n));
+  el.innerHTML=`<div class="ov-head"><span class="t">Latest run</span>
+      ${scope?`<span class="re-tag" data-tip="${esc(scope)}">partial run</span>`:""}
+      <span class="when">${fmtWhen(lr.at)}${sm.llm_cost_usd?` · ${money(sm.llm_cost_usd)} spent`:""} · <a href="javascript:switchTab('runs')" title="Full statistics for every run">details</a></span></div>
+    <div class="flow">
+      ${chip(sm.companies_fetched!=null?fmtN(sm.companies_fetched):"—","companies","Companies whose job boards were fetched in this run.")}${arrow}
+      ${chip(fmtN(sm.postings_seen),"fetched","Job postings retrieved from those companies in this run — including ones already known from earlier runs.")}${arrow}
+      ${chip("+"+fmtN(sm.postings_new),"new","Postings seen for the very first time in this run.")}${arrow}
+      ${chip(fmtN(sm.filtered_out),"filtered","Dropped by the hard filters: wrong occupation, seniority, location or language — plus duplicates.")}${arrow}
+      ${chip(fmtN(judged),"scored","Postings Claude judged against your CV and preferences in this run.")}${arrow}
+      ${chip("+"+fmtN(added),"to board","New recommendations this run added to your board.","final")}
+    </div>`;
+}
+function renderDbCard(s){
+  const el=$("#dbCard"), c=s.composition||{};
+  const kpi=(l,n,tip)=>`<div class="kpi"><div class="n">${n}</div>
+    <div class="l">${l}${infoIcon(tip)}</div></div>`;
+  el.innerHTML=`<div class="ov-head"><span class="t">Database</span>
+      <span class="when"><span class="hint" data-tip="Job ads currently live across all tracked companies.">${fmtN(c.open)} open postings</span> · <span class="hint" data-tip="Tracked companies that currently have at least one open posting, out of all target companies.">${fmtN(s.companies_with_jobs??0)}/${fmtN(s.companies)} companies with jobs</span> · <span class="hint" data-tip="Total Claude API cost across all runs so far.">${money(s.llm_spend_total||0)} total spend</span></span></div>
+    <div class="kpis">
+      ${kpi("New",fmtN(s.new),"Board roles you haven't acted on yet.")}
+      ${kpi("Marked",fmtN(s.marked),"Roles you marked as interesting — your to-apply list.")}
+      ${kpi("Applied",fmtN(s.applied),"Roles you told JobScout you applied to.")}
+    </div>`;
+}
+function renderApiBanner(reason){
+  const el=$("#apiBanner");
+  if(!reason){el.style.display="none";el.innerHTML="";return;}
+  const billing=/credit|billing/i.test(reason);
+  el.style.display="block";
+  el.innerHTML=`<span class="ab-t">Claude scoring is unavailable — no new roles can reach the board.</span>
+    <span class="ab-w">${esc(reason)}.</span><br>
+    Feeds are still refreshed and every eligible posting stays queued.
+    ${billing?`Top up at <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noreferrer">console.anthropic.com → Plans &amp; Billing</a>, then hit <b>Run pipeline</b> again — the whole backlog gets scored in that run.`
+             :`Fix the API access, then hit <b>Run pipeline</b> again — the whole backlog gets scored in that run.`}`;
+}
+async function loadStats(){
+  const s = await (await fetch("/api/stats")).json();
+  renderApiBanner(s.llm_fatal||"");
+  // shortlist_min is the pipeline's surface threshold (shown on the DB card).
+  // The board filter deliberately does NOT inherit it — it starts at 0.
+  if(s.shortlist_min!=null) state.shortlistMin=+s.shortlist_min;
+  renderRunCard(s.last_run);
+  renderDbCard(s);
+  // Archive/Coverage/Run-History pills are visible before those tabs are ever
+  // opened — feed them from stats so they are correct on first paint.
+  $("#cArch").textContent=(s.skipped||0)+(s.rejected||0);
+  $("#cCov").textContent=s.companies_feed??0;
+  $("#cRuns").textContent=s.runs_recorded??0;
+  const mb=$("#modelBadge"), mt=$("#modelText");
+  if(s.llm_enabled){mb.classList.remove("heur");mt.textContent=prettyModel(s.model);}
+  else{mb.classList.add("heur");mt.textContent="Heuristic scorer";}
+  $("#spendBadge").innerHTML = `API spend <b>${money(s.llm_spend_total||0)}</b>`;
+  if(!polling) setRunning(!!(s.run && s.run.running));
+}
+function prettyModel(m){
+  if(!m) return "";
+  if(m.includes("sonnet")) return "Claude Sonnet"+(m.match(/sonnet-(\d)/)?" "+m.match(/sonnet-(\d)/)[1]:"");
+  if(m.includes("haiku")) return "Claude Haiku";
+  if(m.includes("opus")) return "Claude Opus";
+  return m;
+}
+
+/* ---------- board ---------- */
+function renderStatusChips(){
+  $("#statusChips").innerHTML = BOARD_STATUSES.map(s=>
+    `<span class="chip ${state.statuses.has(s)?'on':''}" onclick="toggleStatus('${s}')">${s}</span>`).join("");
+}
+function toggleStatus(s){state.statuses.has(s)?state.statuses.delete(s):state.statuses.add(s);
+  renderStatusChips();}
+function onMinFit(){state.minFit=+$("#minFit").value;state.minFitTouched=true;
+  $("#minFitVal").textContent=state.minFit;}
+function clearFilters(){
+  // Reset the panel to its defaults (min fit 0 = show everything).
+  state.statuses=new Set(BOARD_STATUSES);
+  state.minFit=0;state.minFitTouched=false;
+  $("#minFit").value=0;$("#minFitVal").textContent="0";
+  $("#q").value="";$("#postedWithin").value="";
+  state.comps.clear();$("#compQ").value="";renderCompanyOptions();
+  renderStatusChips();
+}
+
+/* ---------- company multi-select ---------- */
+function toggleCompMenu(ev){
+  ev.stopPropagation();
+  const m=$("#compMenu"), open=!m.classList.contains("open");
+  m.classList.toggle("open",open);
+  $("#compBtn").setAttribute("aria-expanded",String(open));
+  if(open){ renderCompanyOptions(); setTimeout(()=>$("#compQ").focus(),50); }
+}
+function closeCompMenu(){
+  $("#compMenu").classList.remove("open");
+  $("#compBtn").setAttribute("aria-expanded","false");
+}
+document.addEventListener("click",closeCompMenu);
+function renderCompanyOptions(){
+  const q=($("#compQ").value||"").trim().toLowerCase();
+  const list=state.companyNames.filter(c=>!q||c.toLowerCase().includes(q));
+  // data-name + event delegation (no inline handlers): names like "L'Oréal"
+  // must survive verbatim.
+  $("#compList").innerHTML=list.length?list.map(c=>`
+    <label><input type="checkbox" data-name="${esc(c)}" ${state.comps.has(c)?"checked":""}>
+      <span>${esc(c)}</span></label>`).join("")
+    :`<div style="padding:10px;font-size:12.5px;color:var(--muted)">${state.companyNames.length?"No match.":"No companies on the board yet."}</div>`;
+  updateCompBtn();
+}
+$("#compList").addEventListener("change",e=>{
+  const cb=e.target;
+  if(cb && cb.matches("input[type=checkbox]") && cb.dataset.name!=null){
+    if(cb.checked) state.comps.add(cb.dataset.name); else state.comps.delete(cb.dataset.name);
+    updateCompBtn();
+  }
+});
+function compLabel(names){
+  const n=names.length;
+  if(!n) return "All companies";
+  if(n===1) return names[0];
+  if(n===2) return names.join(", ");
+  return `${names[0]} +${n-1} more`;
+}
+function updateCompBtn(){
+  const sel=[...state.comps];
+  const t=$("#compBtnTxt");
+  t.textContent=compLabel(sel);
+  t.classList.toggle("none",!sel.length);
+  $("#compBtn").title=sel.length?sel.join(", "):"Pick one or more companies";
+}
+function clearCompanyFilter(){state.comps.clear();renderCompanyOptions();}
+function showAllFits(){
+  state.minFit=0;state.minFitTouched=true;
+  $("#minFit").value=0;$("#minFitVal").textContent="0";
+  if(state.applied) state.applied.minFit=0;
+  renderSearchSummary();
+  renderBoard();
+}
+function doSearch(){
+  state.searched=true;
+  // Snapshot the panel: results only change when a new search is configured.
+  state.applied={
+    q:($("#q").value||"").trim().toLowerCase(),
+    statuses:new Set(state.statuses.size?[...state.statuses]:BOARD_STATUSES),
+    minFit:state.minFit,
+    within:$("#postedWithin").value?+$("#postedWithin").value:null,
+    comps:new Set(state.comps),
+  };
+  state.limit=40;
+  renderSearchMode();
+  renderBoard();
+}
+// The search panel makes way for a "Current search" summary once a search ran;
+// New Search brings it back with everything reset for a fresh configuration.
+function newSearch(){
+  state.searched=false;
+  state.applied=null;
+  state.limit=40;
+  clearFilters();
+  renderSearchMode();
+  renderBoard();
+  setTimeout(()=>$("#q").focus(),60);
+}
+function renderSearchMode(){
+  const panel=$("#searchPanel"), sa=$("#searchActive");
+  panel.classList.toggle("hidden",state.searched);
+  sa.classList.toggle("hidden",!state.searched);
+  const shown=state.searched?sa:panel;
+  shown.classList.remove("fade-in");void shown.offsetWidth;shown.classList.add("fade-in");
+  renderSearchSummary();
+}
+function renderSearchSummary(){
+  const a=state.applied;
+  if(!state.searched||!a){$("#saChips").innerHTML="";return;}
+  const chips=[];
+  if(a.q) chips.push(`<span class="sa-chip">“${esc(a.q)}”</span>`);
+  const st=[...a.statuses];
+  chips.push(`<span class="sa-chip plain">${st.length===BOARD_STATUSES.length?"All statuses":esc(st.join(" + "))}</span>`);
+  if(a.minFit>0) chips.push(`<span class="sa-chip plain">fit ≥ ${a.minFit}</span>`);
+  if(a.within) chips.push(`<span class="sa-chip plain">last ${a.within} days</span>`);
+  const cs=[...a.comps];
+  if(cs.length) chips.push(`<span class="sa-chip plain" title="${esc(cs.join(", "))}">${esc(compLabel(cs))}</span>`);
+  if(!a.q&&chips.length===1&&a.minFit<=0) chips.push(`<span class="sa-chip plain">everything on the board</span>`);
+  $("#saChips").innerHTML=chips.join("");
+}
+
+async function loadBoard(){
+  // Always fetch the three board statuses; the Search snapshot narrows them
+  // client-side. (Skipped/Rejected stay in the Archive tab.)
+  const qs=new URLSearchParams({status:BOARD_STATUSES.join(",")});
+  const d=await (await fetch("/api/board?"+qs)).json();
+  state.rows=d.rows;
+  state.companyNames=[...new Set(d.rows.map(r=>r.company))].sort((a,b)=>a.localeCompare(b));
+  // Drop selections for companies that no longer have board rows.
+  const live=new Set(state.companyNames);
+  [...state.comps].forEach(c=>{if(!live.has(c)) state.comps.delete(c);});
+  renderCompanyOptions();
+  // Land ON the board, not on a prompt to go find it: with roles waiting, the
+  // old "Set your filters above and hit Search" welcome state was
+  // indistinguishable from an empty board. This also covers the run that puts
+  // the FIRST roles on an empty board. doSearch() renders; nothing below it
+  // may be skipped, or the Companies picker never gets filled.
+  if(!state.searched && d.rows.length){ doSearch(); return; }
+  renderBoard();
+}
+
+function filteredRows(ignoreFit){
+  const a=state.applied;
+  if(!a) return [];
+  let rows=state.rows.filter(r=>
+    a.statuses.has(r.status) &&
+    (ignoreFit || r.fit_score==null || r.fit_score>=a.minFit) &&
+    (!a.comps.size || a.comps.has(r.company)) &&
+    (!a.q || r.title.toLowerCase().includes(a.q) || r.company.toLowerCase().includes(a.q)) &&
+    (a.within==null || (daysAgo(r.posted_date)!=null && daysAgo(r.posted_date)<=a.within)));
+  const sort=$("#sortBy").value;
+  if(sort==="posted") rows.sort((a,b)=>(b.posted_date||"").localeCompare(a.posted_date||""));
+  else if(sort==="company") rows.sort((a,b)=>a.company.localeCompare(b.company));
+  else rows.sort((a,b)=>((b.fit_score??-1)-(a.fit_score??-1)));
+  return rows;
+}
+
+function renderBoard(){
+  const head=$("#resultsHead"), L=$("#boardList");
+  if(!state.searched){
+    // Welcome state: nothing is listed until the user searches.
+    head.classList.add("hidden");
+    $("#moreBtn").classList.add("hidden");
+    $("#cBoard").textContent=state.rows.length;
+    L.innerHTML=`<div class="empty welcome">
+      <div class="wicon">🔍</div>
+      <b>Search your board</b>
+      <p>${state.rows.length?`Hit <b>Search</b> to list all ${state.rows.length} roles on your board.`
+            :"No roles on the board yet — run the pipeline to fetch and score fresh postings."}</p>
+    </div>`;
+    return;
+  }
+  head.classList.remove("hidden");
+  const rows=filteredRows();
+  const hidden=state.applied.minFit>0?filteredRows(true).length-rows.length:0;
+  $("#cBoard").textContent=rows.length;
+  $("#boardCount").innerHTML=(rows.length?`${rows.length} role${rows.length>1?"s":""} match your search`:"")+
+    (hidden>0?` · <a href="javascript:showAllFits()" style="color:var(--brand-ink)">${hidden} below fit ${state.applied.minFit} hidden</a>`:"");
+  if(!rows.length){
+    L.innerHTML=`<div class="empty"><b>No roles match this search.</b><br>
+      Lower the min fit score, widen the status filter — or clear the search box and hit Search again.</div>`;
+    $("#moreBtn").classList.add("hidden");return;
+  }
+  L.innerHTML=rows.slice(0,state.limit).map(roleCard).join("");
+  $("#moreBtn").classList.toggle("hidden",rows.length<=state.limit);
+}
+function showMore(){state.limit+=40;renderBoard();}
+
+function roleCard(r){
+  const fc=fitColor(r.fit_score);
+  const fit=r.fit_score==null?"—":Math.round(r.fit_score);
+  const age=daysAgo(r.posted_date);
+  const dateTxt=r.posted_date?(r.date_confidence==="low"?"~"+r.posted_date:r.posted_date):"date n/a";
+  const freshTag=(age!=null&&age<=7&&r.status==="New")?`<span class="tag new">new</span>`:"";
+  const closedTag=r.is_open?"":`<span class="tag closed">no longer listed</span>`;
+  const u=safeUrl(r.url);
+  const title=u?`<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(r.title)}</a>`:esc(r.title);
+  const watch=r.watch_outs?`<div class="watch"><b>⚠</b><span>${esc(r.watch_outs)}</span></div>`:"";
+  const tag=r.llm_used?`<span class="tag llm">Claude</span>`:`<span class="tag heur">heuristic</span>`;
+  const revTag=r.validated?`<span class="tag reviewed" title="Passed the final Claude review against your profile">reviewed ✓</span>`:"";
+  const revNote=r.validation_note?`<div class="watch"><b>🔎</b><span>${esc(r.validation_note)}</span></div>`:"";
+  const desc=r.description?`<button class="desc-toggle" onclick="toggleDesc(this)">Show description</button>
+      <div class="desc">${esc(r.description)}</div>`:"";
+  return `<div class="role" id="role-${r.rec_id}">
+    <div class="fit" style="background:${fc}">${fit}<small>/100</small></div>
+    <div class="body">
+      <h3>${title}</h3>
+      <div class="meta"><span>${esc(r.company)}</span><span class="sep">·</span>
+        <span>${esc(r.location||"—")}</span><span class="sep">·</span><span>${dateTxt}</span>
+        ${freshTag}${closedTag}${tag}${revTag}${r.category?`<span class="tag cat">${esc(r.category)}</span>`:""}</div>
+      <p class="why">${esc(r.rationale)}</p>${watch}${revNote}${desc}
+    </div>
+    <div class="actions">
+      <div class="statuspill" style="background:${statusColor(r.status)}">${r.status}</div>
+      <div class="seg">
+        <button class="act-mark" onclick="setStatus(${r.rec_id},'Marked')">Mark</button>
+        <button class="act-applied" onclick="setStatus(${r.rec_id},'Applied')">Applied</button>
+        <button class="act-skip" onclick="setStatus(${r.rec_id},'Skipped')">Skip</button>
+        <button class="act-reject" onclick="setStatus(${r.rec_id},'Rejected')">Reject</button>
+      </div>
+      <textarea class="note" placeholder="Notes…" onchange="setNotes(${r.rec_id},this.value)">${esc(r.notes)}</textarea>
+    </div></div>`;
+}
+function toggleDesc(btn){
+  const d=btn.nextElementSibling;const on=d.classList.toggle("show");
+  btn.textContent=on?"Hide description":"Show description";
+}
+
+async function setStatus(id,status){
+  await fetch(`/api/rec/${id}/status`,{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({status})});
+  toast(`Status → ${status}`); loadBoard(); loadStats();
+}
+async function setNotes(id,notes){
+  await fetch(`/api/rec/${id}/notes`,{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({notes})});
+  toast("Note saved");
+}
+
+/* ---------- archive ---------- */
+let archRows=[];
+async function loadArchive(){
+  const d=await (await fetch("/api/archive")).json();
+  archRows=d.rows;
+  $("#cArch").textContent=d.count;
+  renderArchive();
+}
+function renderArchive(){
+  const want=$("#archFilter").value;                 // "" = both
+  const rows=archRows.filter(r=>!want||r.status===want);
+  const label=want?want.toLowerCase():"archived";
+  $("#archCount").textContent=rows.length
+    ? `${rows.length} ${label} role${rows.length>1?"s":""}` +
+      (want?` (of ${archRows.length} archived)`:"") + " — restore any of them to the board."
+    : "";
+  const L=$("#archiveList");
+  if(!rows.length){
+    L.innerHTML=`<div class="empty">${archRows.length
+      ? `No <b>${esc(want)}</b> roles in the archive — switch the filter above.`
+      : "Nothing archived yet. Skipped and rejected roles land here."}</div>`;
+    return;
+  }
+  L.innerHTML=rows.map(r=>`<div class="role">
+    <div class="fit" style="background:${fitColor(r.fit_score)}">${r.fit_score==null?"—":Math.round(r.fit_score)}<small>/100</small></div>
+    <div class="body"><h3>${safeUrl(r.url)?`<a href="${esc(safeUrl(r.url))}" target="_blank" rel="noopener noreferrer">${esc(r.title)}</a>`:esc(r.title)}</h3>
+      <div class="meta"><span>${esc(r.company)}</span><span class="sep">·</span><span>${esc(r.location||"—")}</span>
+        <span class="sep">·</span><span class="statuspill" style="display:inline-block;padding:2px 9px;background:${statusColor(r.status)}">${r.status}</span></div>
+      <p class="why">${esc(r.rationale)}</p></div>
+    <div class="actions"><button class="btn" onclick="restoreRec(${r.rec_id})">↩ Restore</button></div>
+  </div>`).join("");
+}
+async function restoreRec(id){
+  await fetch(`/api/rec/${id}/status`,{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({status:"New"})});
+  toast("Restored to board");
+  loadArchive(); loadBoard(); loadStats();
+}
+
+/* ---------- coverage ---------- */
+const TIER_META={feed:["Live feed","s-feed"],browser:["Browser tier","s-browser"],residual:["No public feed","s-residual"]};
+let covData=null, covFilter="";
+async function loadCoverage(){
+  covData=await (await fetch("/api/companies")).json();
+  const t=covData.tiers||{};
+  $("#cCov").textContent=t.feed??"";
+  const pct=covData.total?Math.round(100*(t.feed||0)/covData.total):0;
+  const chips=[
+    ["", `<b>${covData.total}</b> target companies`],
+    ["jobs", `<b style="color:var(--good)">${covData.with_jobs??0}</b> returning jobs`],
+    ["empty", `<b style="color:var(--warn)">${covData.empty??0}</b> empty`],
+    ["feed", `<b style="color:var(--good)">${t.feed||0}</b> live feeds (${pct}%)`],
+    ["browser", `<b style="color:var(--warn)">${t.browser||0}</b> browser tier`],
+    ["residual", `<b style="color:var(--muted)">${t.residual||0}</b> unreachable`]];
+  $("#covSummary").innerHTML=chips.map(([f,html])=>
+    `<div class="cov-chip ${covFilter===f&&f?'on':''}" onclick="filterTier('${f}')">${html}</div>`).join("");
+  renderCovRows();
+}
+function filterTier(t){covFilter=(covFilter===t)?"":t;loadCoverage();}
+function healthCell(c){
+  if(!c.last_fetch_at) return `<span class="health" style="color:var(--faint)">—</span>`;
+  const st=c.last_fetch_status||"";
+  const cls=st==="ok"?"ok":(st==="empty"?"empty":"error");
+  const label=st==="ok"?"ok":(st==="empty"?"empty":"error");
+  return `<span class="health ${cls}" title="${esc(st)}">${label} · ${esc(c.last_fetch_at.slice(5,16))}</span>`;
+}
+function renderCovRows(){
+  const f=covFilter;
+  const rows=covData.companies.filter(c=>{
+    if(f==="jobs") return c.open_postings>0;
+    if(f==="empty") return !c.open_postings;
+    return !f || c.tier===f;
+  });
+  $("#covTable").querySelector("tbody").innerHTML=rows.map(c=>{
+    const [label,cls]=TIER_META[c.tier];
+    const u=safeUrl(c.ats_token);  // browser/residual token is a careers URL
+    const tokCell=c.tier==="feed"?`<span class="mono">${esc(c.ats_token||"")}</span>`
+      :(u?`<a class="mono" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(c.ats_token)}</a>`:"");
+    const jobs=c.open_postings||0;
+    return `<tr>
+      <td><b>${esc(c.name)}</b><div style="color:var(--faint);font-size:11.5px">${esc(c.category||"")}</div></td>
+      <td><span class="badge-status ${cls}">${label}</span></td>
+      <td>${jobs>0?`<b>${jobs}</b>`:`<span style="color:var(--warn)">0</span>`}</td>
+      <td>${c.eligible_postings??""}</td>
+      <td>${c.surfaced?`<b style="color:var(--good-ink)">${c.surfaced}</b>`:"0"}</td>
+      <td>${healthCell(c)}</td>
+      <td>${c.ats_type?esc(c.ats_type):'<span style="color:#cbd5e1">—</span>'}</td>
+      <td>${tokCell}</td></tr>`;
+  }).join("");
+}
+
+/* ---------- run history ---------- */
+let runsData=[];
+async function loadRuns(){
+  const d=await (await fetch("/api/runs")).json();
+  runsData=d.runs||[];
+  $("#cRuns").textContent=d.count??runsData.length;
+  renderRuns();
+}
+function renderRuns(){
+  const L=$("#runsList");
+  if(!runsData.length){
+    L.innerHTML=`<div class="empty"><b>No runs recorded yet.</b><br>
+      Statistics for every pipeline run land here — hit <b>Run pipeline</b> to start one.</div>`;
+    return;
+  }
+  const arrow=`<div class="farrow">→</div>`;
+  const chip=(n,l)=>`<div class="fchip"><div class="fn">${n}</div><div class="fl">${l}</div></div>`;
+  L.innerHTML=runsData.map(r=>{
+    const sm=r.summary||{};
+    const judged=sm.llm_used??sm.scored??0, removed=sm.validation_removed??0;
+    const added=Math.max(0,(sm.scored??0)-removed);
+    const scope=(sm.notes||[]).find(n=>/^partial run:/.test(n));
+    const pend=(sm.notes||[]).find(n=>/queued for (the )?next run|stay queued/.test(n));
+    const det=[];
+    if(sm.postings_closed) det.push(`<span><b>${fmtN(sm.postings_closed)}</b> closed</span>`);
+    if(sm.floor_rejected) det.push(`<span><b>${fmtN(sm.floor_rejected)}</b> archived below the score floor</span>`);
+    if(removed) det.push(`<span><b>${fmtN(removed)}</b> removed by the final review (of ${fmtN(sm.validated??0)} checked)</span>`);
+    if(sm.llm_errors) det.push(`<span><b>${fmtN(sm.llm_errors)}</b> LLM error${sm.llm_errors>1?"s":""}</span>`);
+    if(sm.fetch_errors) det.push(`<span style="color:var(--warn-ink)"><b>${fmtN(sm.fetch_errors)}</b> feed error${sm.fetch_errors>1?"s":""}</span>`);
+    if(pend) det.push(`<span>${esc(pend)}</span>`);
+    const notes=(sm.notes||[]).filter(n=>n!==scope&&n!==pend);
+    return `<div class="run-entry">
+      <div class="re-head"><span class="re-when">${fmtWhen(r.at)}</span>
+        ${scope?`<span class="re-tag" data-tip="${esc(scope)}">partial run</span>`:""}
+        <span class="re-cost">${sm.llm_cost_usd?money(sm.llm_cost_usd)+" spent":""}</span></div>
+      <div class="flow">
+        ${chip(sm.companies_fetched!=null?fmtN(sm.companies_fetched):"—","companies")}${arrow}
+        ${chip(fmtN(sm.postings_seen),"fetched")}${arrow}
+        ${chip("+"+fmtN(sm.postings_new),"new")}${arrow}
+        ${chip(fmtN(sm.filtered_out),"filtered")}${arrow}
+        ${chip(fmtN(judged),"scored")}${arrow}
+        <div class="fchip final"><div class="fn">+${fmtN(added)}</div><div class="fl">to board</div></div>
+      </div>
+      ${det.length?`<div class="re-details">${det.join("")}</div>`:""}
+      ${notes.length?`<div class="re-notes">${notes.map(n=>`<div>· ${esc(n)}</div>`).join("")}</div>`:""}
+    </div>`;
+  }).join("");
+}
+
+/* ---------- hard filters ---------- */
+let hfData=null, hfModal={mode:null,key:null};
+async function loadFilters(){
+  const d=await (await fetch("/api/filters")).json();
+  hfData=d;
+  $("#cFilt").textContent=d.stats?.active??"";
+  renderFilters();
+}
+async function apiFilter(method,url,body){
+  try{
+    const r=await fetch(url,{method,headers:{"Content-Type":"application/json"},
+      body:body!==undefined?JSON.stringify(body):undefined});
+    const d=await r.json().catch(()=>({}));
+    const err=r.ok?null:(typeof d.detail==="string"?d.detail:"Request failed");
+    return {ok:r.ok,data:d,error:err};
+  }catch(e){return {ok:false,data:null,error:"Could not reach the server"};}
+}
+const HF_FIELD_LABEL={title:"job title",location:"location",description:"description",
+  "title+description":"title or description"};
+function termChips(terms,cls,max=8){
+  const shown=terms.slice(0,max).map(t=>`<span class="term ${cls||""}">${esc(t)}</span>`).join("");
+  return shown+(terms.length>max?`<span class="term ${cls||""}">+${terms.length-max} more</span>`:"");
+}
+function hfRuleCell(f){
+  if(f.builtin){
+    const bits=[];
+    if(f.editable.includes("max_days")) bits.push(`older than <b>${f.params.max_days}</b> days`);
+    else if(f.editable.includes("max_years")) bits.push(`more than <b>${f.params.max_years}</b> years required`);
+    else{
+      // show the real words this rule looks for; the full inventory lives in Edit
+      const total=(f.details||[]).reduce((n,g)=>n+(g.terms||[]).length,0);
+      const prev=f.preview||[];
+      const more=Math.max(0,total-prev.length);
+      bits.push(termChips(prev,"",6)
+        +(more>0?`<span class="term" style="color:var(--faint);background:none">+${more} more — see Edit</span>`:""));
+    }
+    const extras=[...(f.extra_terms||[]),...Object.values(f.extra_groups||{}).flat()];
+    if(extras.length)
+      bits.push(`<div style="margin-top:3px">${termChips(extras,"extra")}</div>`);
+    return bits.join("");
+  }
+  return `<div class="rulehead">${f.params.match==="word"?"whole words":"contains"} · ${HF_FIELD_LABEL[f.params.field]||esc(f.params.field)}</div>
+    ${termChips(f.params.terms||[])}`;
+}
+// Category suggestions for custom filters: every addable built-in group label
+// plus the categories already used by existing custom filters.
+function categorySuggestions(){
+  const s=new Set();
+  ((hfData&&hfData.filters)||[]).forEach(f=>{
+    (f.details||[]).forEach(g=>{if(g.addable)s.add(g.label);});
+    if(!f.builtin&&f.category)s.add(f.category);
+  });
+  return [...s].sort((a,b)=>a.localeCompare(b));
+}
+function renderFilters(){
+  if(!hfData) return;
+  const s=hfData.stats||{};
+  $("#hfStats").innerHTML=[
+    `<div class="cov-chip static"><b>${s.active??0}</b> active</div>`,
+    `<div class="cov-chip static"><b style="color:var(--muted)">${s.inactive??0}</b> disabled</div>`,
+    `<div class="cov-chip static"><b>${s.custom??0}</b> custom</div>`,
+    `<div class="cov-chip static"><b style="color:var(--warn-ink)">${fmtN(s.excluded_total)}</b> open postings excluded</div>`,
+  ].join("");
+  $("#hfBanner").style.display=hfData.changed_since_run?"block":"none";
+  $("#hfTable").querySelector("tbody").innerHTML=(hfData.filters||[]).map(f=>{
+    const type=f.builtin?`<span class="tag builtin">built-in</span>`:`<span class="tag custom">custom</span>`;
+    const cat=!f.builtin&&f.category?` <span class="tag cat" data-tip="Category">${esc(f.category)}</span>`:"";
+    const what=f.builtin?f.what
+      :(f.what||`Excludes postings whose ${HF_FIELD_LABEL[f.params.field]||f.params.field} matches any listed term.`);
+    return `<tr class="${f.enabled?"":"hf-off"}">
+      <td><div class="hf-name">${esc(f.name)} ${type}${cat}</div>
+          <div class="hf-what">${esc(what)}</div></td>
+      <td class="hf-rule">${hfRuleCell(f)}</td>
+      <td class="hf-count">${f.excluded_now?`<b>${fmtN(f.excluded_now)}</b>`:`<span style="color:var(--faint)">0</span>`}</td>
+      <td class="hf-switch"><label class="switch" data-tip="${f.enabled?"Active — click to disable":"Disabled — click to enable"}">
+        <input type="checkbox" data-key="${esc(f.key)}" ${f.enabled?"checked":""}
+               aria-label="Enable ${esc(f.name)}"><span class="sl"></span></label></td>
+      <td class="hf-actions">
+        <button class="btn small" onclick="openFilterModal('${esc(f.key)}')">Edit</button>
+        ${f.builtin?"":`<button class="btn small danger" onclick="deleteFilter(this,'${esc(f.key)}')">Delete</button>`}
+      </td></tr>`;
+  }).join("");
+  const other=s.other_exclusions||[];
+  $("#hfOther").innerHTML=other.length
+    ? `Also excluded for other reasons (pipeline verdicts, not hard filters): `
+      +other.map(o=>`${esc(o.label)} <b>${fmtN(o.count)}</b>`).join(" · ")
+    : "";
+}
+$("#hfTable").addEventListener("change",async e=>{
+  const cb=e.target;
+  if(!cb.matches(".switch input[data-key]")) return;
+  cb.disabled=true;
+  const r=await apiFilter("POST","/api/filters/"+encodeURIComponent(cb.dataset.key),
+                          {enabled:cb.checked});
+  if(!r.ok){toast(r.error);cb.checked=!cb.checked;cb.disabled=false;return;}
+  toast(cb.checked?"Filter enabled — applies on the next run":"Filter disabled — applies on the next run");
+  loadFilters();
+});
+async function deleteFilter(btn,key){
+  if(btn.dataset.arm!=="1"){       // two-step confirm, no blocking dialog
+    btn.dataset.arm="1";btn.textContent="Confirm delete";
+    setTimeout(()=>{btn.dataset.arm="";btn.textContent="Delete";},3200);
+    return;
+  }
+  const r=await apiFilter("DELETE","/api/filters/"+encodeURIComponent(key));
+  if(!r.ok){toast(r.error);return;}
+  toast("Filter deleted — applies on the next run");
+  loadFilters();
+}
+async function deleteFilterFromModal(btn){
+  if(btn.dataset.arm!=="1"){       // same two-step confirm as the table button
+    btn.dataset.arm="1";btn.textContent="Confirm delete";
+    setTimeout(()=>{btn.dataset.arm="";btn.textContent="Delete filter";},3200);
+    return;
+  }
+  const r=await apiFilter("DELETE","/api/filters/"+encodeURIComponent(hfModal.key));
+  if(!r.ok) return fmError(r.error);
+  $("#fmBack").classList.remove("open");
+  toast("Filter deleted — applies on the next run");
+  loadFilters();
+}
+function filterByKey(k){return (hfData&&hfData.filters||[]).find(f=>f.key===k);}
+function fmError(msg){const e=$("#fmError");e.textContent=msg;e.style.display="block";}
+function openFilterModal(key){
+  const f=key?filterByKey(key):null;
+  if(key&&!f) return;
+  hfModal={mode:f?"edit":"create",key:key||null};
+  const isCustom=!f||!f.builtin;
+  $("#fmError").style.display="none";
+  $("#fmTitle").textContent=f?`Edit “${f.name}”`:"Add a hard filter";
+  $("#fmWhat").textContent=f&&f.builtin?f.what
+    :"Postings matching this filter are excluded before any scoring — exactly like the built-in rules. Changes apply from the next pipeline run.";
+  $("#fmCustom").style.display=isCustom?"block":"none";
+  // Full transparency for built-ins: every category of words/signals the rule
+  // looks for. Categories that list exclusions take user additions inline.
+  const groups=f&&f.builtin?(f.details||[]):[];
+  const extraOk=!!(f&&f.builtin&&f.extra_field);
+  const eg=(f&&f.extra_groups)||{};
+  // filter-wide additions (incl. legacy flat extra terms) live under "General"
+  const shown=extraOk?[...groups,{label:"General",terms:[],addable:true,general:true}]:groups;
+  $("#fmDetailsRow").style.display=shown.length?"block":"none";
+  $("#fmDetailsHint").textContent=extraOk
+    ?`Built-in words are maintained in code — disable the whole filter to stop them. The dashed boxes take your own ${f.extra_field} words per category (whole-word match): add, change or clear them there.`
+    :"";
+  $("#fmDetailsHint").style.display=extraOk?"block":"none";
+  $("#fmDetails").innerHTML=shown.map(g=>{
+    const mine=g.general?[...(f.extra_terms||[]),...(eg["General"]||[])]:(eg[g.label]||[]);
+    const input=extraOk&&g.addable
+      ?`<input class="hf-groupterms" data-group="${esc(g.label)}" value="${esc(mine.join(", "))}"
+               placeholder="Add your own words to this category — comma-separated">`:"";
+    return `<h5>${esc(g.label)}</h5>
+      <div>${(g.terms||[]).map(t=>`<span class="term">${esc(t)}</span>`).join("")}</div>${input}`;
+  }).join("");
+  $("#fmDaysRow").style.display=f&&f.builtin&&f.editable.includes("max_days")?"block":"none";
+  $("#fmYearsRow").style.display=f&&f.builtin&&f.editable.includes("max_years")?"block":"none";
+  const del=$("#fmDelete");
+  del.style.display=f&&!f.builtin?"inline-flex":"none";
+  del.dataset.arm="";del.textContent="Delete filter";
+  if(f&&f.builtin){
+    $("#fmDays").value=f.params.max_days??"";
+    $("#fmYears").value=f.params.max_years??"";
+  }
+  if(isCustom){
+    $("#hfCatList").innerHTML=categorySuggestions()
+      .map(c=>`<option value="${esc(c)}">`).join("");
+    $("#fmName").value=f?f.name:"";
+    $("#fmDesc").value=f?(f.what||""):"";
+    $("#fmCat").value=f?(f.category||""):"";
+    $("#fmField").value=f?f.params.field:"title";
+    $("#fmMatch").value=f?f.params.match:"word";
+    $("#fmTerms").value=f?(f.params.terms||[]).join("\n"):"";
+  }
+  $("#fmBack").classList.add("open");
+  setTimeout(()=>{
+    const first=[...document.querySelectorAll("#fmBack input,#fmBack textarea")]
+      .find(el=>el.offsetParent!==null);
+    if(first) first.focus();
+  },60);
+}
+function closeFilterModal(ev){
+  if(ev&&ev.target!==$("#fmBack")) return;   // only backdrop or explicit close
+  $("#fmBack").classList.remove("open");
+}
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape") $("#fmBack").classList.remove("open");
+});
+function splitTerms(v){return (v||"").split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean);}
+async function saveFilterModal(){
+  const f=hfModal.key?filterByKey(hfModal.key):null;
+  const creating=hfModal.mode==="create";
+  const body={};
+  if(creating||(f&&!f.builtin)){
+    body.name=$("#fmName").value;
+    body.description=$("#fmDesc").value;
+    body.category=$("#fmCat").value;
+    body.field=$("#fmField").value;
+    body.match=$("#fmMatch").value;
+    body.terms=splitTerms($("#fmTerms").value);
+    if(!body.name.trim()) return fmError("Give the filter a name.");
+    if(!body.terms.length) return fmError("Add at least one term — that is the rule.");
+  }else{
+    if(f.editable.includes("max_days")){
+      const v=parseInt($("#fmDays").value,10);
+      if(isNaN(v)||v<1||v>365) return fmError("Days must be a number between 1 and 365.");
+      body.max_days=v;
+    }
+    if(f.editable.includes("max_years")){
+      const v=parseInt($("#fmYears").value,10);
+      if(isNaN(v)||v<0||v>30) return fmError("Years must be a number between 0 and 30.");
+      body.max_years=v;
+    }
+    if(f.extra_field){
+      // collect the per-category inputs; legacy flat terms were folded into
+      // "General" on open, so the flat list is cleared server-side
+      const groups={};
+      document.querySelectorAll("#fmDetails .hf-groupterms").forEach(inp=>{
+        const t=splitTerms(inp.value);
+        if(t.length) groups[inp.dataset.group]=t;
+      });
+      body.extra_groups=groups;
+      body.extra_terms=[];
+    }
+  }
+  const btn=$("#fmSave");btn.disabled=true;
+  const r=await apiFilter("POST",
+    creating?"/api/filters":"/api/filters/"+encodeURIComponent(hfModal.key),body);
+  btn.disabled=false;
+  if(!r.ok) return fmError(r.error);
+  $("#fmBack").classList.remove("open");
+  toast(creating?"Filter created — applies on the next run":"Filter saved — applies on the next run");
+  loadFilters();
+}
+
+/* ---------- settings ---------- */
+async function loadProfile(){
+  const p=await (await fetch("/api/profile")).json();
+  $("#prefs").value=p.preferences;
+  $("#setModel").textContent=p.llm_enabled?`${prettyModel(p.model)} (${p.model})`:"Heuristic (no API key found)";
+  $("#setExtractModel").textContent=prettyModel(p.extract_model)+` (${p.extract_model})`;
+  $("#setThresh").textContent=p.shortlist_min;
+  $("#setBudget").textContent=money(p.budget_per_run)+" cap";
+  $("#setSpendRun").textContent=money(p.spend_last_run||0);
+  $("#setSpendTotal").textContent=money(p.spend_total||0);
+  $("#setCv").textContent=p.cv_chars?`${p.cv_chars.toLocaleString()} characters loaded`:"none";
+  $("#cvBox").textContent=p.cv_preview||"No CV loaded.";
+}
+async function savePrefs(){
+  await fetch("/api/profile",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({preferences:$("#prefs").value})});
+  $("#prefsHint").textContent="Saved. Run the pipeline to re-score with the new preferences.";
+  toast("Preferences saved");
+}
+
+/* ---------- run pipeline (with optional company scope) ---------- */
+let polling=null;
+let runScope=new Set();          // company names selected for the next run
+let runCompanyNames=null;        // cached list for the picker
+
+function toggleRunMenu(ev){
+  ev.stopPropagation();
+  const m=$("#runMenu"), open=!m.classList.contains("open");
+  m.classList.toggle("open",open);
+  if(open){
+    if(runCompanyNames===null){
+      runCompanyNames=[];
+      fetch("/api/companies").then(r=>r.json()).then(d=>{
+        runCompanyNames=(d.companies||[]).filter(c=>c.detect_status==="detected")
+          .map(c=>({name:c.name,tier:c.tier}))
+          .sort((a,b)=>a.name.localeCompare(b.name));
+        renderRunCompanies();
+      });
+    }
+    renderRunCompanies();
+    $("#runQ").value="";
+    setTimeout(()=>$("#runQ").focus(),50);
+  }
+}
+document.addEventListener("click",()=>$("#runMenu").classList.remove("open"));
+function renderRunCompanies(){
+  const q=($("#runQ").value||"").trim().toLowerCase();
+  const list=(runCompanyNames||[]).filter(c=>!q||c.name.toLowerCase().includes(q));
+  // data-name + event delegation (no inline handlers): names like
+  // "L'Oréal" or "Erste Group / Erste Digital" must survive verbatim.
+  $("#runCompanies").innerHTML=list.length?list.map(c=>`
+    <label><input type="checkbox" data-name="${esc(c.name)}" ${runScope.has(c.name)?"checked":""}>
+      <span>${esc(c.name)}</span>
+      <span class="tiny">${c.tier==="browser"?"browser":""}</span></label>`).join("")
+    :`<div style="padding:10px;font-size:12.5px;color:var(--muted)">${runCompanyNames===null?"Loading companies…":"No match."}</div>`;
+  updateRunScopeUi();
+}
+document.querySelector("#runCompanies").addEventListener("change",e=>{
+  const cb=e.target;
+  if(cb && cb.matches("input[type=checkbox]") && cb.dataset.name!=null){
+    if(cb.checked) runScope.add(cb.dataset.name); else runScope.delete(cb.dataset.name);
+    updateRunScopeUi();
+  }
+});
+function updateRunScopeUi(){
+  const n=runScope.size;
+  $("#runScopedBtn").textContent=n?`Run selected (${n})`:"Run selected";
+  $("#runScopedBtn").disabled=!n;
+  $("#runCaret").classList.toggle("scoped",n>0);
+  $("#runCaret").title=n?`${n} companies selected for the next run`:"Choose companies for this run";
+  const note=$("#runScopeNote");
+  note.style.display=n?"block":"none";
+  note.textContent=n?`Scoped run: only ${[...runScope].slice(0,3).join(", ")}${n>3?` +${n-3} more`:""} will be fetched, scored and reviewed.`:"";
+}
+function clearRunScope(){runScope.clear();renderRunCompanies();}
+async function runScoped(){
+  if(!runScope.size) return;
+  $("#runMenu").classList.remove("open");
+  await startRun([...runScope]);
+}
+async function runPipeline(){ await startRun([]); }
+async function runLinkcheck(){
+  let r;
+  try{
+    const resp=await fetch("/api/linkcheck",{method:"POST"});
+    r=await resp.json();
+    if(!resp.ok){toast(r.detail||"Could not start the link check");return;}
+  }catch(e){toast("Could not reach the server");return;}
+  if(!r.ok && r.running){toast("A run is already in progress");return;}
+  $("#runSummary").style.display="none";
+  renderProgress({phase:"linkcheck",label:"Checking recommendation links…"});
+  setRunning(true); pollRun();
+}
+async function startRun(companies){
+  let r;
+  try{
+    const resp=await fetch("/api/run",{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({companies})});
+    r=await resp.json();
+    if(!resp.ok){toast(r.detail||"Could not start the run");return;}
+  }catch(e){toast("Could not reach the server");return;}
+  if(!r.ok && r.running){toast("A run is already in progress");return;}
+  $("#runSummary").style.display="none";
+  renderProgress({phase:"starting",label:"Starting run…"+(companies.length?` (${companies.length} selected)`:"")});
+  setRunning(true); pollRun();
+}
+
+// The pipeline thread reports {phase,label,done,total,current,counters,events};
+// this paints it. total==null renders as an indeterminate sweep.
+function renderProgress(p){
+  const el=$("#runProgress");
+  if(!p || !p.phase || p.phase==="done"){el.style.display="none";return;}
+  el.style.display="block";
+  const hasTotal = p.total!=null && p.total>0;
+  const done = Math.min(p.done||0, p.total||0);
+  const pct = hasTotal? Math.min(100, Math.round(done/p.total*100)) : null;
+  $("#rpPhase").textContent = p.label || p.phase;
+  $("#rpPct").textContent = hasTotal? `${done} / ${p.total} · ${pct}%` : "";
+  const f=$("#rpFill");
+  f.classList.toggle("ind", !hasTotal);
+  f.style.width = hasTotal? pct+"%" : "";
+  $("#rpCurrent").textContent = p.current? "▸ "+p.current : "";
+  const c=p.counters||{}, bits=[];
+  if(c.postings_new) bits.push(`<span><b>${c.postings_new}</b> new postings</span>`);
+  if(c.filtered_out) bits.push(`<span><b>${c.filtered_out}</b> filtered out</span>`);
+  if(c.scored) bits.push(`<span><b>${c.scored}</b> scored</span>`);
+  if(c.llm_cost) bits.push(`<span><b>${money(c.llm_cost)}</b> LLM spend</span>`);
+  if(c.links_dead) bits.push(`<span style="color:var(--warn-ink)"><b>${c.links_dead}</b> dead link${c.links_dead>1?"s":""} removed</span>`);
+  if(c.fetch_errors) bits.push(`<span style="color:var(--warn-ink)"><b>${c.fetch_errors}</b> feed error${c.fetch_errors>1?"s":""}</span>`);
+  $("#rpCounters").innerHTML=bits.join("");
+  const ev=(p.events||[]).slice(-3).reverse();
+  const log=$("#rpLog");
+  log.style.display=ev.length?"block":"none";
+  log.innerHTML=ev.map(e=>`<div class="${e.startsWith("★")?"star":""}">${esc(e)}</div>`).join("");
+}
+
+function pollRun(){
+  clearInterval(polling);
+  polling=setInterval(async()=>{
+    const s=await (await fetch("/api/run/status")).json();
+    setRunning(!!s.running);
+    if(s.running){renderProgress(s.progress);return;}
+    clearInterval(polling); polling=null;
+    renderProgress(null);
+    const el=$("#runSummary");
+    if(s.error){
+      el.className="runsum err"; el.style.display="block";
+      el.innerHTML=`Run failed: ${esc(s.error)}`;
+      toast("Run failed");
+    } else if(s.summary){
+      const fatal=s.summary.llm_fatal||"";
+      if(fatal){
+        // The run finished, but the only thing that puts roles on the board
+        // never happened. Saying "complete" here is how this stayed hidden.
+        el.className="runsum err"; el.style.display="block";
+        el.innerHTML=`<b>Nothing could be scored — ${esc(fatal)}.</b>
+          Feeds were refreshed and the postings are queued; run again once the
+          API works and the backlog gets judged.`;
+        toast("Run finished — scoring unavailable");
+      } else {
+        const added=Math.max(0,(s.summary.scored||0)-(s.summary.validation_removed||0));
+        el.style.display="none";      // the Latest-run card tells the story
+        toast(added?`Run complete — ${added} new on the board`
+                   :"Run complete — no new roles this time");
+      }
+    }
+    // Refresh EVERYTHING the run may have changed — the visible tab included,
+    // so no stale numbers survive a run anywhere in the UI.
+    loadStats(); loadBoard();
+    if(!$("#tab-coverage").classList.contains("hidden")) loadCoverage();
+    if(!$("#tab-archive").classList.contains("hidden")) loadArchive();
+    if(!$("#tab-runs").classList.contains("hidden")) loadRuns();
+    loadFilters();          // per-filter exclusion counts move with every run
+  },1000);
+}
+function setRunning(on){
+  const b=$("#runBtn");b.disabled=on;
+  const lb=$("#linkcheckBtn"); if(lb) lb.disabled=on;
+  $("#runIcon").innerHTML=on?'<span class="spin"></span>':"⟳";
+  $("#runLabel").textContent=on?"Running…":"Run pipeline";
+}
+
+/* ---------- init ---------- */
+(async function(){
+  renderStatusChips();
+  loadFilters();                       // fills the Hard Filters pill
+  await loadStats();
+  await loadBoard();
+  // (loadBoard() above already applies the default search when roles exist.)
+  const s=await (await fetch("/api/run/status")).json();
+  if(s.running){setRunning(true);renderProgress(s.progress);pollRun();}
+})();
+
+/* Keep-alive: while a tab is open the server hears from us every 25 s.
+   Once every tab is closed the heartbeats stop and the server shuts itself
+   down after its idle window — no orphaned process holding the port. */
+setInterval(()=>{fetch("/api/heartbeat",{method:"POST"}).catch(()=>{})},25000);
+</script>
+</body>
+</html>

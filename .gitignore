@@ -1,0 +1,24 @@
+# --- Python / tooling ---
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# --- Secrets ---
+.env
+key.txt
+**/key.txt
+
+# --- Local data (personal: CV, preferences, scored postings, decisions) ---
+data/*.db
+data/*.db-journal
+data/*.db-shm
+data/*.db-wal
+data/*.log
+data/.fuse_hidden*
+data/profile/*
+!data/profile/*.example.txt
+
+# --- OS ---
+.DS_Store

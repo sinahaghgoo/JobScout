@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- macOS launchd agent: runs JobScout every morning at 07:30.
+     1) Edit the two paths below to your real location.
+     2) cp scripts/com.jobscout.daily.plist ~/Library/LaunchAgents/
+     3) launchctl load ~/Library/LaunchAgents/com.jobscout.daily.plist -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.jobscout.daily</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/ABSOLUTE/PATH/TO/jobscout/scripts/run_daily.sh</string>
+    </array>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key><integer>7</integer>
+        <key>Minute</key><integer>30</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/ABSOLUTE/PATH/TO/jobscout/data/jobscout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/ABSOLUTE/PATH/TO/jobscout/data/jobscout.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

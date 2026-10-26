@@ -1,0 +1,114 @@
+name,category,locations,interview_pct
+Erste Group / Erste Digital,Austrian Tier-1 & 2,Vienna,0.6
+A1 Telekom Austria,Austrian Tier-1 & 2,Vienna,0.6
+Verbund,Austrian Tier-1 & 2,Vienna,0.6
+Mondi,Austrian Tier-1 & 2,Vienna,0.6
+Andritz,Austrian Tier-1 & 2,Graz,0.5
+Red Bull,Austrian Tier-1 & 2,Salzburg,0.5
+ÖBB Austrian Railways,Austrian Tier-1 & 2,Vienna,0.6
+BRZ Bundesrechenzentrum,Austrian Tier-1 & 2,Vienna,0.6
+Wiener Stadtwerke / Wien Energie,Austrian Tier-1 & 2,Vienna,0.6
+Österreichische Post,Austrian Tier-1 & 2,Vienna,0.55
+Austrian Airlines (Lufthansa Group),Austrian Tier-1 & 2,Vienna,0.5
+IAEA - International Atomic Energy Agency,International Organizations,Vienna,0.28
+UNIDO - UN Industrial Development Org,International Organizations,Vienna,0.3
+OPEC - Org of the Petroleum Exporting Countries,International Organizations,Vienna,0.25
+UNODC - UN Office on Drugs and Crime,International Organizations,Vienna,0.22
+CTBTO - Comprehensive Nuclear-Test-Ban Treaty Org,International Organizations,Vienna,0.22
+OSCE - Org for Security and Co-operation in Europe,International Organizations,Vienna,0.22
+OFID - OPEC Fund for International Development,International Organizations,Vienna,0.25
+UNOV - UN Office at Vienna,International Organizations,Vienna,0.2
+WHO - World Health Organization,International Organizations,Geneva,0.12
+ILO - International Labour Organization,International Organizations,Geneva,0.12
+WTO - World Trade Organization,International Organizations,Geneva,0.1
+WIPO - World Intellectual Property Organization,International Organizations,Geneva,0.12
+WMO - World Meteorological Organization,International Organizations,Geneva,0.15
+ITU - International Telecommunication Union,International Organizations,Geneva,0.15
+UNHCR - UN Refugee Agency,International Organizations,Geneva,0.12
+UNCTAD - UN Conference on Trade and Development,International Organizations,Geneva,0.12
+UNECE - UN Economic Commission for Europe,International Organizations,Geneva,0.15
+IOM - International Organization for Migration,International Organizations,Geneva,0.12
+ICRC - International Committee of the Red Cross,International Organizations,Geneva,0.15
+IFRC - International Federation of Red Cross,International Organizations,Geneva,0.15
+UNOG - UN Office at Geneva,International Organizations,Geneva,0.15
+WEF - World Economic Forum,International Organizations,Cologny (Geneva),0.12
+European Commission,International Organizations,Brussels,0.1
+European Parliament,International Organizations,"Brussels, Strasbourg, Luxembourg",0.1
+Council of the EU,International Organizations,Brussels,0.1
+EDA - European Defence Agency,International Organizations,Brussels,0.12
+ECB - European Central Bank,International Organizations,Frankfurt,0.12
+OECD - Org for Economic Co-operation and Development,International Organizations,Paris,0.12
+UNESCO,International Organizations,Paris,0.12
+IEA - International Energy Agency,International Organizations,Paris,0.22
+ESA - European Space Agency (HQ),International Organizations,Paris,0.15
+FATF - Financial Action Task Force,International Organizations,Paris,0.15
+EBA - European Banking Authority,International Organizations,Paris,0.18
+ESMA - European Securities and Markets Authority,International Organizations,Paris,0.18
+ICC - International Chamber of Commerce,International Organizations,Paris,0.15
+ICC - International Criminal Court,International Organizations,The Hague,0.1
+ICJ - International Court of Justice,International Organizations,The Hague,0.08
+OPCW - Org for the Prohibition of Chemical Weapons,International Organizations,The Hague,0.12
+Europol,International Organizations,The Hague,0.22
+Microsoft,Big Tech (US-HQ EU offices),"Vienna, Munich, Dublin, Zurich",0.18
+Google,Big Tech (US-HQ EU offices),"Zurich, Munich, Dublin, London",0.08
+Google DeepMind,Big Tech (US-HQ EU offices),"London, Paris, Zurich",0.06
+Amazon / AWS,Big Tech (US-HQ EU offices),"Munich, Dublin, Berlin, Luxembourg",0.15
+Meta,Big Tech (US-HQ EU offices),"London, Dublin, Munich",0.08
+Apple,Big Tech (US-HQ EU offices),"Munich, Cork",0.08
+NVIDIA,Big Tech (US-HQ EU offices),"Munich, Zurich",0.1
+Salesforce,Big Tech (US-HQ EU offices),"Dublin, Munich, London",0.25
+Adobe,Big Tech (US-HQ EU offices),"Dublin, Munich, Hamburg",0.25
+Oracle,Big Tech (US-HQ EU offices),"Vienna, Zurich",0.3
+Palantir,Big Tech (US-HQ EU offices),"London, Munich, Zurich",0.18
+OpenAI,Big Tech (US-HQ EU offices),"London, Dublin",0.05
+Anthropic,Big Tech (US-HQ EU offices),"London, Dublin",0.05
+Snowflake,Big Tech (US-HQ EU offices),"Amsterdam, London, Munich",0.25
+Stripe,Big Tech (US-HQ EU offices),"Dublin, London",0.1
+Bloomberg,Big Tech (US-HQ EU offices),London,0.12
+ServiceNow,Big Tech (US-HQ EU offices),"Amsterdam, London, Munich",0.25
+IBM,Big Tech (US-HQ EU offices),"Vienna, Zurich",0.35
+TikTok / ByteDance,Big Tech (US-HQ EU offices),"London, Dublin",0.15
+SAP,European Tech,"Walldorf, Vienna, Munich",0.45
+Celonis,European Tech,Munich,0.4
+Databricks,European Tech,"Amsterdam, Munich, London",0.35
+Mistral AI,European Tech,Paris,0.06
+ASML,European Tech,Veldhoven,0.2
+Booking.com,European Tech,Amsterdam,0.2
+Adyen,European Tech,Amsterdam,0.18
+Atos / Eviden,European Tech,"Paris, Munich",0.4
+Check24,European Tech,Munich,0.4
+Roche,Pharma & Life Sciences,Basel,0.3
+Novartis,Pharma & Life Sciences,Basel,0.3
+Sanofi,Pharma & Life Sciences,Paris,0.25
+Novo Nordisk,Pharma & Life Sciences,Copenhagen,0.25
+Bosch,Industrial & Energy,"Gerlinger, Vienna",0.4
+ABB,Industrial & Energy,Zurich,0.35
+Schneider Electric,Industrial & Energy,"Paris, Grenoble",0.3
+Shell,Industrial & Energy,"London, The Hague",0.35
+BP,Industrial & Energy,London,0.35
+TotalEnergies,Industrial & Energy,Paris,0.3
+Equinor,Industrial & Energy,"Stavanger, Oslo",0.3
+Eni,Industrial & Energy,"Milan, Rome",0.3
+Logitech,Industrial & Energy,Lausanne,0.25
+Rolls-Royce,Industrial & Energy,Derby,0.3
+Repsol,Industrial & Energy,Madrid,0.45
+Philips,Industrial & Energy,"Amsterdam, Eindhoven",0.35
+Renault,Industrial & Energy,Paris,0.35
+L'Oréal,Consumer Retail & Luxury,Paris,0.25
+LVMH,Consumer Retail & Luxury,Paris,0.2
+Adidas,Consumer Retail & Luxury,"Herzogenaurach, Amsterdam",0.35
+Nike EMEA,Consumer Retail & Luxury,Hilversum,0.25
+LEGO Group,Consumer Retail & Luxury,Billund,0.25
+Carlsberg,Consumer Retail & Luxury,Copenhagen,0.3
+BMW,Automotive,Munich,0.4
+Mercedes-Benz,Automotive,Stuttgart,0.4
+Audi,Automotive,Ingolstadt,0.4
+Porsche,Automotive,Stuttgart,0.4
+Volkswagen / CARIAD,Automotive,"Wolfsburg, Berlin",0.4
+Tesla,Automotive,Berlin,0.25
+Maersk,Telecom & Logistics,Copenhagen,0.35
+Lufthansa Group,Telecom & Logistics,Frankfurt,0.35
+Air France-KLM,Telecom & Logistics,"Paris, Amsterdam",0.3
+Sky,Media & Travel,"London, Munich",0.25
+Uber,Media & Travel,Amsterdam,0.2
+Airbnb,Media & Travel,Dublin,0.18
