@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- macOS launchd agent: runs JobScout every morning at 07:30.
+<!-- macOS launchd agent: runs JobScout every morning at a specified time (in this case 07:30).
      1) Edit the two paths below to your real location.
      2) cp scripts/com.jobscout.daily.plist ~/Library/LaunchAgents/
      3) launchctl load ~/Library/LaunchAgents/com.jobscout.daily.plist -->
