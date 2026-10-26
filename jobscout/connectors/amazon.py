@@ -81,8 +81,6 @@ class AmazonConnector(Connector):
                     title=norm_space(j.get("title")),
                     location=norm_space(j.get("normalized_location") or j.get("location")),
                     posted_date=posted,
-                    # confidence keys off the PARSED value — an unparseable
-                    # raw date must not masquerade as high-confidence.
                     date_confidence="high" if posted else "low",
                     url=("https://www.amazon.jobs" + path) if path.startswith("/") else path,
                     description=desc.strip(),
@@ -94,10 +92,3 @@ class AmazonConnector(Connector):
             if offset >= int(data.get("hits") or 0):
                 break
         return jobs
-
-    def probe(self, token: str) -> bool:
-        try:
-            data = http_get(self._url(self._codes(token), 1, 0)).json()
-            return bool(data.get("jobs"))
-        except Exception:  # noqa: BLE001
-            return False
