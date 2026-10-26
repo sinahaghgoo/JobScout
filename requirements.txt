@@ -3,7 +3,7 @@ requests>=2.31
 python-dateutil>=2.9
 openpyxl>=3.1
 python-docx>=1.1
-anthropic>=0.40          # Claude API: Sonnet scores matches, Haiku extracts Tier-3 pages
+anthropic>=0.40          # Claude API: Sonnet scores matches
 
 # Dashboard (local web app)
 fastapi>=0.110
