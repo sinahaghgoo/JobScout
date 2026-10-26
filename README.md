@@ -14,8 +14,7 @@ The core design decision: **read structured ATS feeds instead of scraping
 HTML.** Each connector pulls a company's open roles as clean JSON/XML/RSS —
 title, location, posting date, description and a **stable job ID** — so dates
 are reliable and your decisions (applied, skipped, marked) survive across runs.
-Where no feed exists, a browser tier renders the page and a small LLM extracts
-the postings.
+
 
 ---
 
@@ -51,7 +50,7 @@ the postings.
 - **Incremental & safe** — only new postings are filtered and scored; vanished
   postings close automatically, but a failed or empty fetch never wipes a
   healthy board, and user decisions are never overwritten.
-- **Works without an API key** — a local heuristic scorer stands in for Claude.
+- **Works without an API key** -
 
 ## Requirements
 
